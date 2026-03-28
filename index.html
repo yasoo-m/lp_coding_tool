@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テキスト化LP作成ツール</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif; background: #f0f2f5; color: #333; font-size: 14px; }
+
+/* ヘッダー */
+.app-header { background: #1a1a2e; color: #fff; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 8px; }
+.app-header h1 { font-size: 15px; font-weight: 600; }
+.header-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.btn { padding: 7px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: #4361ee; color: #fff; }
+.btn-primary:hover { background: #3a56d4; }
+.btn-success { background: #06d6a0; color: #fff; }
+.btn-success:hover { background: #05b888; }
+.btn-warning { background: #f77f00; color: #fff; }
+.btn-warning:hover { background: #d96e00; }
+.btn-danger { background: #ef476f; color: #fff; }
+.btn-danger:hover { background: #d63d60; }
+.btn-outline { background: transparent; border: 1px solid #ccc; color: #fff; }
+.btn-outline:hover { background: rgba(255,255,255,0.1); }
+.platform-select { padding: 7px 10px; border-radius: 6px; border: 1px solid #555; background: #2a2a4e; color: #fff; font-size: 12px; font-weight: 600; }
+
+/* メインレイアウト */
+.app-main { display: flex; height: calc(100vh - 52px); }
+
+/* 左パネル */
+.editor-panel { width: 420px; min-width: 420px; background: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; overflow: hidden; }
+.block-palette { padding: 10px 12px; background: #f8f9fa; border-bottom: 1px solid #ddd; }
+.block-palette h3 { font-size: 11px; color: #666; margin-bottom: 6px; }
+.palette-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
+.palette-btn { padding: 4px 9px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; font-size: 11px; transition: all 0.2s; }
+.palette-btn:hover { background: #e8f0fe; border-color: #4361ee; }
+.blocks-list { flex: 1; overflow-y: auto; padding: 10px; }
+
+/* ブロックカード */
+.block-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 6px; overflow: hidden; }
+.block-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.block-card.dragging { opacity: 0.5; }
+.block-card-header { display: flex; align-items: center; padding: 7px 10px; background: #f8f9fa; border-bottom: 1px solid #eee; cursor: grab; user-select: none; }
+.block-card-header:active { cursor: grabbing; }
+.block-drag-handle { color: #999; margin-right: 6px; font-size: 13px; }
+.block-type-badge { background: #4361ee; color: #fff; padding: 1px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-right: 6px; }
+.block-card-title { flex: 1; font-size: 12px; font-weight: 600; }
+.block-card-actions { display: flex; gap: 2px; }
+.block-action-btn { width: 22px; height: 22px; border: none; border-radius: 4px; background: transparent; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; color: #666; }
+.block-action-btn:hover { background: #eee; }
+.block-action-btn.delete:hover { background: #fee; color: #ef476f; }
+.block-card-body { padding: 10px; display: none; }
+.block-card.open .block-card-body { display: block; }
+.form-group { margin-bottom: 8px; }
+.form-group label { display: block; font-size: 11px; font-weight: 600; color: #666; margin-bottom: 3px; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 7px 9px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; font-family: inherit; }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #4361ee; }
+.form-group textarea { resize: vertical; min-height: 50px; }
+.spec-row { display: flex; gap: 4px; margin-bottom: 4px; align-items: center; }
+.spec-row input { flex: 1; }
+.spec-row .remove-row-btn { width: 26px; height: 26px; border: none; border-radius: 4px; background: #fee; color: #ef476f; cursor: pointer; font-size: 15px; flex-shrink: 0; }
+.col-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.col-input-group { background: #f8f9fa; padding: 8px; border-radius: 6px; }
+.col-input-group h4 { font-size: 11px; color: #4361ee; margin-bottom: 5px; }
+
+/* 右パネル */
+.preview-panel { flex: 1; background: #e8e8e8; overflow-y: auto; padding: 16px; }
+.preview-container { max-width: 840px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+
+/* 空状態 */
+.empty-state { text-align: center; padding: 50px 20px; color: #999; }
+.empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+
+/* モーダル */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+.modal-overlay.active { display: flex; }
+.modal { background: #fff; border-radius: 12px; width: 750px; max-width: 92vw; max-height: 85vh; display: flex; flex-direction: column; }
+.modal-header { padding: 14px 18px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h2 { font-size: 15px; }
+.modal-close { width: 30px; height: 30px; border: none; border-radius: 6px; background: transparent; cursor: pointer; font-size: 18px; }
+.modal-body { padding: 16px; overflow-y: auto; flex: 1; }
+.modal-body textarea { width: 100%; height: 380px; font-family: "Consolas","Monaco",monospace; font-size: 11px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: vertical; }
+.modal-footer { padding: 10px 18px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tab-bar { display: flex; gap: 0; margin-bottom: 10px; }
+.tab-btn { padding: 7px 14px; border: 1px solid #ddd; background: #f8f9fa; cursor: pointer; font-size: 12px; font-weight: 600; }
+.tab-btn:first-child { border-radius: 6px 0 0 6px; }
+.tab-btn:last-child { border-radius: 0 6px 6px 0; }
+.tab-btn.active { background: #4361ee; color: #fff; border-color: #4361ee; }
+
+/* 統計バー */
+.stats-bar { display: flex; gap: 12px; font-size: 11px; color: #666; }
+.stats-bar .stat { display: flex; align-items: center; gap: 4px; }
+.stats-bar .stat.warn { color: #f77f00; font-weight: 600; }
+.stats-bar .stat.error { color: #ef476f; font-weight: 600; }
+
+/* プレビュー内LP CSS */
+.preview-lp .lp-wrapper { width:100%;max-width:800px;margin:0 auto;padding:0;border:none;background-color:#fff;text-align:left;overflow-x:hidden;box-sizing:border-box; }
+.preview-lp .lp-title-main { font-family:"Kozuka Gothic Pr6N",sans-serif;font-weight:900;font-size:clamp(22px,4.7vw,28pt);color:#000;line-height:1.0;margin-bottom:0;text-align:left; }
+.preview-lp .lp-title-carmodel { font-family:"Kozuka Gothic Pr6N",sans-serif;font-weight:900;font-size:clamp(11px,2.4vw,14pt);color:#000;line-height:1.0;text-align:right; }
+.preview-lp .lp-title-jp { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:600;font-size:clamp(10px,1.5vw,9pt);color:#666;margin-top:0;margin-bottom:15px;text-align:left;line-height:1.4; }
+.preview-lp .lp-catch { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:600;font-size:clamp(13px,2.2vw,13pt);color:#000;margin-top:-5px;margin-bottom:15px;text-align:left;line-height:1.4; }
+.preview-lp .lp-img-wrap { display:block;position:relative;overflow:hidden;margin-bottom:0; }
+.preview-lp .lp-img-wrap img { width:100%;height:100%;object-fit:cover; }
+.preview-lp .img-800-400 { width:800px;max-width:100%;height:400px;margin:0 auto 40px; }
+.preview-lp .img-800-200 { width:800px;max-width:100%;height:200px;margin:0 auto 5px; }
+.preview-lp .img-388-240 { width:388px;max-width:100%;height:240px;margin:0 auto 10px; }
+.preview-lp .img-388-155 { width:388px;max-width:100%;height:155px;margin:0 auto 10px; }
+.preview-lp .lp-banner-link { display:block;text-decoration:none; }
+.preview-lp .lp-band-title { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:300;font-size:clamp(14px,2.5vw,15pt);color:#000;border-top:1px solid #000;border-bottom:1px solid #000;padding:12px 0;margin:60px auto 30px;text-align:center;width:800px;max-width:100%;box-sizing:border-box;line-height:1.6; }
+.preview-lp .text-heading-lg { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:600;width:800px;max-width:100%;font-size:clamp(16px,2.5vw,17pt);color:#000;margin:0 auto 10px;line-height:1.4;text-align:left; }
+.preview-lp .text-heading-md { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:600;width:800px;max-width:100%;font-size:clamp(15px,2.5vw,16pt);color:#000;margin:0 auto 10px;line-height:1.4;text-align:left; }
+.preview-lp .text-body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:300;width:800px;max-width:100%;font-size:clamp(12px,2.0vw,12pt);color:#000;margin:0 auto 10px;line-height:1.6;text-align:left; }
+.preview-lp .lp-grid-2 { display:flex;justify-content:space-between;width:800px;max-width:100%;gap:0;margin:0 auto 30px; }
+.preview-lp .lp-col { width:388px;max-width:48%;text-align:left; }
+.preview-lp .lp-col .text-heading-md { font-weight:700;font-size:clamp(13px,2.2vw,13pt); }
+.preview-lp .lp-spec-table { width:100%;max-width:800px;border-collapse:collapse;color:#000;margin:0 auto 30px; }
+.preview-lp .lp-spec-table tr:nth-child(odd) { background:#CCC; }
+.preview-lp .lp-spec-table th { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:300;font-size:clamp(11px,2.0vw,12pt);padding:16px;text-align:center;width:30%;vertical-align:middle; }
+.preview-lp .lp-spec-table td { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:300;font-size:clamp(11px,2.0vw,11pt);padding:16px;vertical-align:middle;text-align:left; }
+.img-placeholder { background:#e0e0e0;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;width:100%;height:100%; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>LP Builder</h1>
+  <div class="header-actions">
+    <select class="platform-select" id="platformSelect" onchange="changePlatform()">
+      <option value="makeshop">メイクショップ</option>
+      <option value="rakuten">楽天市場</option>
+      <option value="yahoo">ヤフーショッピング</option>
+    </select>
+    <button class="btn btn-outline" onclick="loadSample()">サンプル</button>
+    <button class="btn btn-warning" onclick="showExportModal()">エクスポート</button>
+    <button class="btn btn-danger" onclick="clearAll()">全クリア</button>
+  </div>
+</header>
+
+<div class="app-main">
+  <div class="editor-panel">
+    <div class="block-palette">
+      <h3>ブロック追加 <span id="platformLabel" style="color:#4361ee;">[メイクショップ]</span></h3>
+      <div class="palette-buttons">
+        <button class="palette-btn" onclick="addBlock('title')">① タイトル</button>
+        <button class="palette-btn" onclick="addBlock('image')">② 画像</button>
+        <button class="palette-btn" onclick="addBlock('band')">③ 帯見出し</button>
+        <button class="palette-btn" onclick="addBlock('heading-lg')">④ 大見出し+本文</button>
+        <button class="palette-btn" onclick="addBlock('heading-md')">⑤ 小見出し+本文</button>
+        <button class="palette-btn" onclick="addBlock('spec')">⑥ スペック表</button>
+        <button class="palette-btn" onclick="addBlock('grid2')">⑦ 2カラム</button>
+        <button class="palette-btn" onclick="addBlock('banner')">⑧ バナー</button>
+        <button class="palette-btn" onclick="addBlock('banner2')">⑨ 2列バナー</button>
+      </div>
+    </div>
+    <div class="blocks-list" id="blocksList"></div>
+  </div>
+  <div class="preview-panel">
+    <div class="preview-container">
+      <div class="preview-lp" id="previewArea">
+        <div class="empty-state"><div class="icon">&#128196;</div><p>ブロックを追加するとプレビューが表示されます</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>HTMLエクスポート <span id="exportPlatformLabel" style="font-size:12px;color:#4361ee;"></span></h2>
+      <button class="modal-close" onclick="closeExportModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="tab-bar" id="exportTabs"></div>
+      <textarea id="exportCode" readonly></textarea>
+    </div>
+    <div class="modal-footer">
+      <div class="stats-bar" id="statsBar"></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-primary" onclick="copyExport()">コピー</button>
+        <button class="btn btn-success" onclick="downloadExport()">DL</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== グローバル状態 =====
+let blocks = [];
+let blockIdCounter = 0;
+let currentPlatform = 'makeshop';
+let currentExportTab = '';
+
+// ===== CSS テンプレート =====
+const CSS_FULL = `/* 全体の設定 */
+.lp-wrapper{width:100%;max-width:800px;margin:0 auto;padding:0;border:none;background-color:#fff;text-align:left;overflow-x:hidden;box-sizing:border-box}
+/* タイトルエリア */
+.lp-title-main{font-family:"Kozuka Gothic Pr6N",sans-serif;font-weight:900;font-size:clamp(22px,4.7vw,28pt);color:#000;line-height:1.0;margin-bottom:0;padding-bottom:0;text-align:left}
+.lp-title-carmodel{font-family:"Kozuka Gothic Pr6N",sans-serif;font-weight:900;font-size:clamp(11px,2.4vw,14pt);color:#000;line-height:1.0;margin-bottom:0;padding-bottom:0;text-align:right}
+.lp-title-jp{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:600;font-size:clamp(10px,1.5vw,9pt);color:#666666;margin-top:0;margin-bottom:15px;text-align:left;display:block;line-height:1.4}
+.lp-catch{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:600;font-size:clamp(13px,2.2vw,13pt);color:#000;margin-top:-5px;margin-bottom:15px;text-align:left;display:block;line-height:1.4}
+/* 画像 */
+.lp-img-wrap{display:block;position:relative;overflow:hidden;margin-bottom:0}
+.lp-img-wrap img{width:100%;height:100%;object-fit:cover}
+.img-800-400{width:800px;height:400px;margin:0 auto 40px;padding-bottom:0;object-fit:cover;display:block}
+.img-800-200{width:800px;height:200px;margin:0 auto 5px;padding-bottom:0;object-fit:cover;display:block}
+.img-388-240{width:388px;height:240px;margin:0 auto 10px;padding-bottom:0;object-fit:cover;display:block}
+/* バナー */
+.img-388-155{width:388px;height:155px;margin:0 auto 10px;padding-bottom:0;object-fit:cover;display:block}
+.lp-banner-link{display:block;text-decoration:none}
+@media screen and (max-width:768px){
+.img-800-400{width:100%;height:auto;aspect-ratio:800/400;margin:0 auto 40px;padding-bottom:0;display:block}
+.img-800-200{width:100%;height:auto;aspect-ratio:800/200;margin:0 auto 5px;padding-bottom:0;display:block}
+.img-388-240{width:100%;height:auto;aspect-ratio:388/240;margin:0 auto 10px;padding-bottom:0;display:block}
+.img-388-155{width:100%;height:auto;aspect-ratio:388/155;margin:0 auto 10px;padding-bottom:0;display:block}
+}
+/* 帯見出し */
+.lp-band-title{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:300;font-size:clamp(14px,2.5vw,15pt);color:#000;border-top:1px solid #000;border-bottom:1px solid #000;padding:12px 0;margin:60px auto 30px;text-align:center;width:800px;max-width:100%;box-sizing:border-box;line-height:1.6}
+/* テキスト */
+.text-heading-lg{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:600;width:800px;max-width:100%;font-size:clamp(16px,2.5vw,17pt);color:#000;margin:0 auto 10px;line-height:1.4;text-align:left}
+.text-heading-md{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:600;width:800px;max-width:100%;font-size:clamp(15px,2.5vw,16pt);color:#000;margin:0 auto 10px;line-height:1.4;text-align:left}
+.text-body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:300;width:800px;max-width:100%;font-size:clamp(12px,2.0vw,12pt);color:#000;margin:0 auto 10px;line-height:1.6;text-align:left}
+/* 2カラム */
+.lp-grid-2{display:flex;justify-content:space-between;width:800px;max-width:100%;gap:0;margin:0 auto 30px}
+.lp-col{width:388px;max-width:48%;text-align:left}
+.lp-col .text-heading-md{font-weight:700;font-size:clamp(13px,2.2vw,13pt)}
+@media screen and (max-width:768px){
+.lp-grid-2{display:block}
+.lp-col{width:100%;max-width:100%;margin-bottom:40px}
+.lp-col:last-child{margin-bottom:0}
+}
+/* スペック表 */
+.lp-spec-table{width:100%;max-width:800px;border-collapse:collapse;color:#000;margin:0 auto 30px}
+.lp-spec-table tr:nth-child(odd){background:#CCC}
+.lp-spec-table th{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:300;font-size:clamp(11px,2.0vw,12pt);padding:16px;text-align:center;width:30%;vertical-align:middle}
+.lp-spec-table td{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-weight:300;font-size:clamp(11px,2.0vw,11pt);padding:16px;vertical-align:middle;text-align:left}
+@media screen and (max-width:768px){
+.lp-spec-table th{padding:12px;width:28%}
+.lp-spec-table td{padding:12px}
+}`;
+
+// ===== インラインCSS対応表（ヤフー用） =====
+const INLINE = {
+  wrapper: 'width:100%;max-width:800px;margin:0 auto;padding:0;border:none;background-color:#fff;text-align:left;overflow-x:hidden;box-sizing:border-box;',
+  headerTop: 'display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;',
+  titleMain: 'font-weight:900;font-size:28pt;color:#000;line-height:1.0;text-align:left;',
+  titleCar: 'font-weight:900;font-size:14pt;color:#000;line-height:1.0;text-align:right;',
+  titleJp: 'font-weight:600;font-size:9pt;color:#666;margin-top:0;margin-bottom:15px;text-align:left;line-height:1.4;',
+  catch: 'font-weight:600;font-size:13pt;color:#000;margin-top:-5px;margin-bottom:15px;text-align:left;line-height:1.4;',
+  imgWrap800x400: 'display:block;position:relative;overflow:hidden;width:800px;height:400px;margin:0 auto 40px;',
+  imgWrap800x200: 'display:block;position:relative;overflow:hidden;width:800px;height:200px;margin:0 auto 5px;',
+  imgWrap388x240: 'display:block;position:relative;overflow:hidden;width:388px;height:240px;margin:0 auto 10px;',
+  imgWrap388x155: 'display:block;position:relative;overflow:hidden;width:388px;height:155px;margin:0 auto 10px;',
+  bannerLink: 'display:block;text-decoration:none;',
+  imgInner: 'width:100%;height:100%;object-fit:cover;',
+  band: 'font-weight:300;font-size:15pt;color:#000;border-top:1px solid #000;border-bottom:1px solid #000;padding:12px 0;margin:60px auto 30px;text-align:center;width:800px;max-width:100%;box-sizing:border-box;line-height:1.6;',
+  headingLg: 'font-weight:600;font-size:17pt;color:#000;width:800px;max-width:100%;margin:0 auto 10px;line-height:1.4;text-align:left;',
+  headingMd: 'font-weight:600;font-size:16pt;color:#000;width:800px;max-width:100%;margin:0 auto 10px;line-height:1.4;text-align:left;',
+  body: 'font-weight:300;font-size:12pt;color:#000;width:800px;max-width:100%;margin:0 auto 10px;line-height:1.6;text-align:left;',
+  grid2: 'display:flex;justify-content:space-between;width:800px;max-width:100%;gap:0;margin:0 auto 30px;',
+  col: 'width:388px;max-width:48%;text-align:left;',
+  colHeading: 'font-weight:700;font-size:13pt;color:#000;margin:0 auto 10px;line-height:1.4;text-align:left;',
+  specTable: 'width:100%;max-width:800px;border-collapse:collapse;color:#000;margin:0 auto 30px;',
+  specTh: 'font-weight:300;font-size:12pt;padding:16px;text-align:center;width:30%;vertical-align:middle;',
+  specTd: 'font-weight:300;font-size:11pt;padding:16px;vertical-align:middle;text-align:left;',
+};
+
+// ===== ブロック定義 =====
+const BLOCK_DEFS = {
+  title: { label: '① タイトル', fields: [
+    { key:'nameEn', label:'商品名（英語）', type:'text', placeholder:'AERO GUARD PLUS' },
+    { key:'carModel', label:'適合車種', type:'text', placeholder:'TOYOTA GR86 / SUBARU BRZ' },
+    { key:'nameJp', label:'商品名（日本語）', type:'text', placeholder:'エアロガード プラス' },
+    { key:'catchCopy', label:'キャッチコピー', type:'text', placeholder:'空力性能と美しさを両立する' },
+  ]},
+  image: { label: '② 画像', fields: [
+    { key:'url', label:'画像URL', type:'text', placeholder:'https://image.rakuten.co.jp/...' },
+    { key:'alt', label:'alt属性', type:'text', placeholder:'商品画像の説明' },
+    { key:'sizeClass', label:'サイズ', type:'select', options: [
+      { value:'img-800-400', label:'800×400（メイン）' },
+      { value:'img-800-200', label:'800×200（横長）' },
+      { value:'img-388-240', label:'388×240（2カラム用）' },
+    ]},
+  ]},
+  band: { label: '③ 帯見出し', fields: [
+    { key:'text', label:'帯テキスト', type:'text', placeholder:'製品の特長' },
+  ]},
+  'heading-lg': { label: '④ 大見出し＋本文', fields: [
+    { key:'heading', label:'見出し', type:'text', placeholder:'高剛性ウレタン素材を採用' },
+    { key:'body', label:'本文', type:'textarea', placeholder:'説明文...' },
+  ]},
+  'heading-md': { label: '⑤ 小見出し＋本文', fields: [
+    { key:'heading', label:'見出し', type:'text', placeholder:'取り付け方法について' },
+    { key:'body', label:'本文', type:'textarea', placeholder:'説明文...' },
+  ]},
+  spec: { label: '⑥ スペック表', isSpec: true, fields: [] },
+  grid2: { label: '⑦ 2カラム', isGrid: true, fields: [] },
+  banner: { label: '⑧ バナー', fields: [
+    { key:'url', label:'画像URL', type:'text', placeholder:'https://image.rakuten.co.jp/.../banner.jpg' },
+    { key:'alt', label:'alt属性', type:'text', placeholder:'バナー画像の説明' },
+    { key:'link', label:'リンクURL', type:'text', placeholder:'https://item.rakuten.co.jp/...' },
+  ]},
+  banner2: { label: '⑨ 2カラムバナー', isBanner2: true, fields: [] },
+};
+
+// ===== ユーティリティ =====
+function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+function nl2br(s) { return s ? esc(s).replace(/\n/g,'<br>\n    ') : ''; }
+
+// ===== プラットフォーム切替 =====
+function changePlatform() {
+  currentPlatform = document.getElementById('platformSelect').value;
+  const labels = { makeshop:'メイクショップ', rakuten:'楽天市場', yahoo:'ヤフーショッピング' };
+  document.getElementById('platformLabel').textContent = '[' + labels[currentPlatform] + ']';
+  renderPreview();
+}
+
+// ===== ブロック追加 =====
+function addBlock(type) {
+  const id = ++blockIdCounter;
+  const data = { id, type };
+  if (type === 'spec') { data.rows = [{key:'',value:''},{key:'',value:''},{key:'',value:''}]; }
+  else if (type === 'grid2') { data.left = {url:'',alt:'',heading:'',body:''}; data.right = {url:'',alt:'',heading:'',body:''}; }
+  else if (type === 'banner2') { data.left = {url:'',alt:'',link:''}; data.right = {url:'',alt:'',link:''}; }
+  else { BLOCK_DEFS[type].fields.forEach(f => { data[f.key] = f.type==='select' ? f.options[0].value : ''; }); }
+  blocks.push(data);
+  renderEditor(); renderPreview();
+  setTimeout(() => { const c = document.querySelector(`[data-block-id="${id}"]`); if(c){c.classList.add('open');c.scrollIntoView({behavior:'smooth',block:'nearest'});} }, 50);
+}
+
+// ===== エディタ描画 =====
+function renderEditor() {
+  const list = document.getElementById('blocksList');
+  if (!list) return;
+  if (blocks.length === 0) { list.innerHTML = '<div class="empty-state"><div class="icon">+</div><p>上のボタンからブロックを追加</p></div>'; return; }
+  list.innerHTML = blocks.map((b, i) => {
+    const d = BLOCK_DEFS[b.type];
+    return `<div class="block-card" data-block-id="${b.id}" data-index="${i}" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragend="dragEnd(event)">
+      <div class="block-card-header" onclick="toggleBlock(${b.id})">
+        <span class="block-drag-handle">&#9776;</span>
+        <span class="block-type-badge">${d.label.substring(0,1)}</span>
+        <span class="block-card-title">${d.label}</span>
+        <div class="block-card-actions">
+          <button class="block-action-btn" onclick="event.stopPropagation();moveBlock(${i},-1)">&#9650;</button>
+          <button class="block-action-btn" onclick="event.stopPropagation();moveBlock(${i},1)">&#9660;</button>
+          <button class="block-action-btn" onclick="event.stopPropagation();duplicateBlock(${i})">&#128203;</button>
+          <button class="block-action-btn delete" onclick="event.stopPropagation();removeBlock(${i})">&#10005;</button>
+        </div>
+      </div>
+      <div class="block-card-body">${renderBlockForm(b)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderBlockForm(b) {
+  if (b.type === 'spec') return renderSpecForm(b);
+  if (b.type === 'grid2') return renderGrid2Form(b);
+  if (b.type === 'banner2') return renderBanner2Form(b);
+  return BLOCK_DEFS[b.type].fields.map(f => {
+    if (f.type === 'select') return `<div class="form-group"><label>${f.label}</label><select onchange="updateField(${b.id},'${f.key}',this.value)">${f.options.map(o=>`<option value="${o.value}"${b[f.key]===o.value?' selected':''}>${o.label}</option>`).join('')}</select></div>`;
+    if (f.type === 'textarea') return `<div class="form-group"><label>${f.label}</label><textarea placeholder="${f.placeholder||''}" oninput="updateField(${b.id},'${f.key}',this.value)">${b[f.key]||''}</textarea></div>`;
+    return `<div class="form-group"><label>${f.label}</label><input type="text" value="${esc(b[f.key]||'')}" placeholder="${f.placeholder||''}" oninput="updateField(${b.id},'${f.key}',this.value)"></div>`;
+  }).join('');
+}
+function renderSpecForm(b) {
+  return `<div>${b.rows.map((r,i)=>`<div class="spec-row"><input type="text" value="${esc(r.key)}" placeholder="項目名" oninput="updateSpecRow(${b.id},${i},'key',this.value)"><input type="text" value="${esc(r.value)}" placeholder="値" oninput="updateSpecRow(${b.id},${i},'value',this.value)"><button class="remove-row-btn" onclick="removeSpecRow(${b.id},${i})">&times;</button></div>`).join('')}</div><button class="btn btn-primary" style="font-size:10px;padding:3px 10px;margin-top:4px;" onclick="addSpecRow(${b.id})">+ 行追加</button>`;
+}
+function renderGrid2Form(b) {
+  function cf(side, lbl) { const d=b[side]; return `<div class="col-input-group"><h4>${lbl}</h4>
+    <div class="form-group"><label>画像URL</label><input type="text" value="${esc(d.url)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','url',this.value)"></div>
+    <div class="form-group"><label>alt</label><input type="text" value="${esc(d.alt)}" placeholder="説明" oninput="updateGridField(${b.id},'${side}','alt',this.value)"></div>
+    <div class="form-group"><label>見出し</label><input type="text" value="${esc(d.heading)}" placeholder="見出し" oninput="updateGridField(${b.id},'${side}','heading',this.value)"></div>
+    <div class="form-group"><label>本文</label><textarea placeholder="説明文" oninput="updateGridField(${b.id},'${side}','body',this.value)">${d.body||''}</textarea></div></div>`; }
+  return `<div class="col-inputs">${cf('left','左カラム')}${cf('right','右カラム')}</div>`;
+}
+function renderBanner2Form(b) {
+  function bf(side, lbl) { const d=b[side]; return `<div class="col-input-group"><h4>${lbl}</h4>
+    <div class="form-group"><label>画像URL</label><input type="text" value="${esc(d.url)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','url',this.value)"></div>
+    <div class="form-group"><label>alt</label><input type="text" value="${esc(d.alt)}" placeholder="バナー説明" oninput="updateGridField(${b.id},'${side}','alt',this.value)"></div>
+    <div class="form-group"><label>リンクURL</label><input type="text" value="${esc(d.link)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','link',this.value)"></div></div>`; }
+  return `<div class="col-inputs">${bf('left','左バナー')}${bf('right','右バナー')}</div>`;
+}
+
+// ===== データ更新 =====
+function updateField(id,k,v){const b=blocks.find(x=>x.id===id);if(b){b[k]=v;renderPreview();}}
+function updateSpecRow(id,ri,f,v){const b=blocks.find(x=>x.id===id);if(b){b.rows[ri][f]=v;renderPreview();}}
+function addSpecRow(id){const b=blocks.find(x=>x.id===id);if(b){b.rows.push({key:'',value:''});renderEditor();renderPreview();reopenBlock(id);}}
+function removeSpecRow(id,ri){const b=blocks.find(x=>x.id===id);if(b&&b.rows.length>1){b.rows.splice(ri,1);renderEditor();renderPreview();reopenBlock(id);}}
+function updateGridField(id,s,f,v){const b=blocks.find(x=>x.id===id);if(b){b[s][f]=v;renderPreview();}}
+
+// ===== ブロック操作 =====
+function toggleBlock(id){const c=document.querySelector(`[data-block-id="${id}"]`);if(c)c.classList.toggle('open');}
+function reopenBlock(id){setTimeout(()=>{const c=document.querySelector(`[data-block-id="${id}"]`);if(c)c.classList.add('open');},50);}
+function moveBlock(i,d){const n=i+d;if(n<0||n>=blocks.length)return;[blocks[i],blocks[n]]=[blocks[n],blocks[i]];renderEditor();renderPreview();}
+function duplicateBlock(i){const c=JSON.parse(JSON.stringify(blocks[i]));c.id=++blockIdCounter;blocks.splice(i+1,0,c);renderEditor();renderPreview();}
+function removeBlock(i){blocks.splice(i,1);renderEditor();renderPreview();}
+function clearAll(){if(!blocks.length)return;if(!confirm('全ブロック削除？'))return;blocks=[];renderEditor();renderPreview();}
+
+// ===== ドラッグ&ドロップ =====
+let dragIdx=null;
+function dragStart(e){dragIdx=parseInt(e.currentTarget.dataset.index);e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function dragOver(e){e.preventDefault();}
+function drop(e){e.preventDefault();const di=parseInt(e.currentTarget.dataset.index);if(dragIdx===null||dragIdx===di)return;const[m]=blocks.splice(dragIdx,1);blocks.splice(di,0,m);dragIdx=null;renderEditor();renderPreview();}
+function dragEnd(e){e.currentTarget.classList.remove('dragging');dragIdx=null;}
+
+// ===== プレビュー描画 =====
+function renderPreview() {
+  const a = document.getElementById('previewArea');
+  if (!a) return;
+  if (!blocks.length) { a.innerHTML = '<div class="empty-state"><div class="icon">&#128196;</div><p>ブロックを追加するとプレビューが表示されます</p></div>'; return; }
+  a.innerHTML = blocks.map(b => previewHTML(b)).join('\n');
+}
+
+function previewHTML(b) {
+  const ph = (v, d) => esc(v) || `<span style="color:#ccc">${d}</span>`;
+  switch(b.type) {
+    case 'title': return `<div class="lp-wrapper"><div class="lp-header-top" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;"><div class="lp-title-main">${ph(b.nameEn,'商品名')}</div><div class="lp-title-carmodel">${ph(b.carModel,'車種')}</div></div><div class="lp-title-jp">${ph(b.nameJp,'日本語名')}</div><div class="lp-catch">${ph(b.catchCopy,'コピー')}</div></div>`;
+    case 'image': return `<div class="lp-img-wrap ${b.sizeClass||'img-800-400'}">${b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">画像URLを入力</div>'}</div>`;
+    case 'band': return `<div class="lp-band-title">${ph(b.text,'帯テキスト')}</div>`;
+    case 'heading-lg': return `<div class="text-heading-lg">${ph(b.heading,'大見出し')}</div><div class="text-body">${nl2br(b.body)||'本文'}</div>`;
+    case 'heading-md': return `<div class="text-heading-md">${ph(b.heading,'小見出し')}</div><div class="text-body">${nl2br(b.body)||'本文'}</div>`;
+    case 'spec': const sr=b.rows.filter(r=>r.key||r.value).map(r=>`<tr><th>${esc(r.key)}</th><td>${esc(r.value)}</td></tr>`).join('\n'); return `<table class="lp-spec-table"><tbody>${sr||'<tr><th>項目</th><td>値</td></tr>'}</tbody></table>`;
+    case 'grid2': function ci(d,l){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:'<div class="img-placeholder">画像</div>'; return `<div class="lp-col"><div class="lp-img-wrap img-388-240">${img}</div><div class="text-heading-md">${ph(d.heading,l)}</div><div class="text-body">${nl2br(d.body)||'本文'}</div></div>`;} return `<div class="lp-grid-2">${ci(b.left,'左')}${ci(b.right,'右')}</div>`;
+    case 'banner': { const img = b.url ? `<img src="${esc(b.url)}" alt="${esc(b.alt)}">` : '<div class="img-placeholder">バナー画像URL (388×155)</div>'; const inner = `<div class="lp-img-wrap img-388-155">${img}</div>`; return b.link ? `<a class="lp-banner-link" href="${esc(b.link)}" target="_blank">${inner}</a>` : inner; }
+    case 'banner2': { function bn(d,label){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:`<div class="img-placeholder">${label} (388×155)</div>`; const inner=`<div class="lp-img-wrap img-388-155">${img}</div>`; return d.link?`<a class="lp-banner-link" href="${esc(d.link)}" target="_blank">${inner}</a>`:inner;} return `<div class="lp-grid-2"><div class="lp-col">${bn(b.left,'左バナー')}</div><div class="lp-col">${bn(b.right,'右バナー')}</div></div>`; }
+  }
+}
+
+// =====================================================
+// エクスポート: メイクショップ（PC版 styleタグ付き完全HTML）
+// =====================================================
+function exportMakeshopFull() {
+  return `<!DOCTYPE html>\n<html lang="ja">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>Product LP</title>\n<style>\n${CSS_FULL}\n</style>\n</head>\n<body>\n\n${exportBodyCSS()}\n\n</body>\n</html>`;
+}
+function exportMakeshopBody() { return exportBodyCSS(); }
+
+// ===== CSSクラス版 本文HTML =====
+function exportBodyCSS() {
+  return blocks.map(b => {
+    switch(b.type) {
+      case 'title': return `<!-- タイトル -->\n<div class="lp-wrapper">\n  <div class="lp-header-top" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;">\n    <div class="lp-title-main">${esc(b.nameEn)}</div>\n    <div class="lp-title-carmodel">${esc(b.carModel)}</div>\n  </div>\n  <div class="lp-title-jp">${esc(b.nameJp)}</div>\n  <div class="lp-catch">${esc(b.catchCopy)}</div>\n</div>`;
+      case 'image': return `<!-- 画像 -->\n<div class="lp-img-wrap ${b.sizeClass||'img-800-400'}">\n  <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n</div>`;
+      case 'band': return `<!-- 帯見出し -->\n<div class="lp-band-title">${esc(b.text)}</div>`;
+      case 'heading-lg': return `<!-- 大見出し+本文 -->\n<div class="text-heading-lg">${esc(b.heading)}</div>\n<div class="text-body">\n  ${nl2br(b.body)}\n</div>`;
+      case 'heading-md': return `<!-- 小見出し+本文 -->\n<div class="text-heading-md">${esc(b.heading)}</div>\n<div class="text-body">\n  ${nl2br(b.body)}\n</div>`;
+      case 'spec': const rows=b.rows.filter(r=>r.key||r.value).map(r=>`    <tr>\n      <th>${esc(r.key)}</th>\n      <td>${esc(r.value)}</td>\n    </tr>`).join('\n'); return `<!-- スペック表 -->\n<table class="lp-spec-table">\n  <tbody>\n${rows}\n  </tbody>\n</table>`;
+      case 'grid2': return `<!-- 2カラム -->\n<div class="lp-grid-2">\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}">\n    </div>\n    <div class="text-heading-md">${esc(b.left.heading)}</div>\n    <div class="text-body">${nl2br(b.left.body)}</div>\n  </div>\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}">\n    </div>\n    <div class="text-heading-md">${esc(b.right.heading)}</div>\n    <div class="text-body">${nl2br(b.right.body)}</div>\n  </div>\n</div>`;
+      case 'banner': { const img = `<!-- バナー -->\n<div class="lp-img-wrap img-388-155">\n  <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n</div>`; return b.link ? `<a class="lp-banner-link" href="${esc(b.link)}" target="_blank">\n${img}\n</a>` : img; }
+      case 'banner2': { function be(d){const img=`<div class="lp-img-wrap img-388-155">\n      <img src="${esc(d.url)}" alt="${esc(d.alt)}">\n    </div>`; return d.link?`<a class="lp-banner-link" href="${esc(d.link)}" target="_blank">\n    ${img}\n    </a>`:img;} return `<!-- 2カラムバナー -->\n<div class="lp-grid-2">\n  <div class="lp-col">\n    ${be(b.left)}\n  </div>\n  <div class="lp-col">\n    ${be(b.right)}\n  </div>\n</div>`; }
+    }
+  }).join('\n\n');
+}
+
+// =====================================================
+// エクスポート: 楽天PC版（<style>+HTML）
+// =====================================================
+function exportRakutenPC() {
+  return `<style>\n${CSS_FULL}\n</style>\n\n${exportBodyCSS()}`;
+}
+
+// =====================================================
+// エクスポート: 楽天スマホ版（テーブルベース、許可タグのみ）
+// =====================================================
+function exportRakutenSP() {
+  return blocks.map(b => {
+    switch(b.type) {
+      case 'title': return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr><td><font size="5"><b>${esc(b.nameEn)}</b></font></td></tr>\n  <tr><td align="right"><font size="2"><b>${esc(b.carModel)}</b></font></td></tr>\n  <tr><td><font size="1" color="#666666">${esc(b.nameJp)}</font></td></tr>\n  <tr><td><font size="3"><b>${esc(b.catchCopy)}</b></font></td></tr>\n</table>\n<br>`;
+      case 'image': return `<img src="${esc(b.url)}" alt="${esc(b.alt)}" width="100%" border="0">\n<br>`;
+      case 'band': return `<hr size="1" color="#000000" noshade>\n<center><font size="3">${esc(b.text)}</font></center>\n<hr size="1" color="#000000" noshade>\n<br>`;
+      case 'heading-lg': return `<font size="4"><b>${esc(b.heading)}</b></font>\n<br>\n<font size="2">${nl2br(b.body)}</font>\n<br><br>`;
+      case 'heading-md': return `<font size="3"><b>${esc(b.heading)}</b></font>\n<br>\n<font size="2">${nl2br(b.body)}</font>\n<br><br>`;
+      case 'spec': const rows=b.rows.filter(r=>r.key||r.value).map((r,i)=> {
+        const bg = i%2===0 ? ' bgcolor="#CCCCCC"' : '';
+        return `  <tr${bg}>\n    <th width="30%" align="center"><font size="2">${esc(r.key)}</font></th>\n    <td><font size="2">${esc(r.value)}</font></td>\n  </tr>`;
+      }).join('\n');
+      return `<table width="100%" cellpadding="8" cellspacing="0" border="0">\n${rows}\n</table>`;
+      case 'grid2': return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr><td>\n    <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}" width="100%" border="0">\n    <br><font size="3"><b>${esc(b.left.heading)}</b></font>\n    <br><font size="2">${nl2br(b.left.body)}</font>\n  </td></tr>\n</table>\n<br>\n<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr><td>\n    <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}" width="100%" border="0">\n    <br><font size="3"><b>${esc(b.right.heading)}</b></font>\n    <br><font size="2">${nl2br(b.right.body)}</font>\n  </td></tr>\n</table>\n<br>`;
+      case 'banner': { const img = `<img src="${esc(b.url)}" alt="${esc(b.alt)}" width="388" border="0">`; return b.link ? `<a href="${esc(b.link)}">${img}</a>\n<br>` : `${img}\n<br>`; }
+      case 'banner2': { function bsp(d){const img=`<img src="${esc(d.url)}" alt="${esc(d.alt)}" width="100%" border="0">`; return d.link?`<a href="${esc(d.link)}">${img}</a>`:img;} return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr>\n    <td width="50%">${bsp(b.left)}</td>\n    <td width="50%">${bsp(b.right)}</td>\n  </tr>\n</table>\n<br>`; }
+    }
+  }).join('\n\n');
+}
+
+// =====================================================
+// エクスポート: ヤフー版（インラインCSS、classなし）
+// =====================================================
+function exportYahoo() {
+  const I = INLINE;
+  return `<div style="${I.wrapper}">\n\n` + blocks.map(b => {
+    switch(b.type) {
+      case 'title': return `  <!-- タイトル -->\n  <div style="${I.headerTop}">\n    <div style="${I.titleMain}">${esc(b.nameEn)}</div>\n    <div style="${I.titleCar}">${esc(b.carModel)}</div>\n  </div>\n  <div style="${I.titleJp}">${esc(b.nameJp)}</div>\n  <div style="${I.catch}">${esc(b.catchCopy)}</div>`;
+      case 'image': { const iw = b.sizeClass==='img-800-200'?I.imgWrap800x200 : b.sizeClass==='img-388-240'?I.imgWrap388x240 : I.imgWrap800x400; return `  <!-- 画像 -->\n  <div style="${iw}">\n    <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`; }
+      case 'band': return `  <!-- 帯見出し -->\n  <div style="${I.band}">${esc(b.text)}</div>`;
+      case 'heading-lg': return `  <!-- 大見出し+本文 -->\n  <div style="${I.headingLg}">${esc(b.heading)}</div>\n  <div style="${I.body}">\n    ${nl2br(b.body)}\n  </div>`;
+      case 'heading-md': return `  <!-- 小見出し+本文 -->\n  <div style="${I.headingMd}">${esc(b.heading)}</div>\n  <div style="${I.body}">\n    ${nl2br(b.body)}\n  </div>`;
+      case 'spec': const rows=b.rows.filter(r=>r.key||r.value).map((r,i)=> {
+        const bg = i%2===0 ? 'background:#CCC;' : '';
+        return `    <tr${bg?' style="'+bg+'"':''}>\n      <th style="${I.specTh}">${esc(r.key)}</th>\n      <td style="${I.specTd}">${esc(r.value)}</td>\n    </tr>`;
+      }).join('\n');
+      return `  <!-- スペック表 -->\n  <table style="${I.specTable}">\n    <tbody>\n${rows}\n    </tbody>\n  </table>`;
+      case 'grid2': return `  <!-- 2カラム -->\n  <div style="${I.grid2}">\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}" style="${I.imgInner}">\n      </div>\n      <div style="${I.colHeading}">${esc(b.left.heading)}</div>\n      <div style="${I.body}">${nl2br(b.left.body)}</div>\n    </div>\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}" style="${I.imgInner}">\n      </div>\n      <div style="${I.colHeading}">${esc(b.right.heading)}</div>\n      <div style="${I.body}">${nl2br(b.right.body)}</div>\n    </div>\n  </div>`;
+      case 'banner': { const img = `  <!-- バナー -->\n  <div style="${I.imgWrap388x155}">\n    <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`; return b.link ? `  <a href="${esc(b.link)}" style="${I.bannerLink}" target="_blank">\n${img}\n  </a>` : img; }
+      case 'banner2': { function byh(d){const img=`<div style="${I.imgWrap388x155}">\n        <img src="${esc(d.url)}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>`; return d.link?`<a href="${esc(d.link)}" style="${I.bannerLink}" target="_blank">\n      ${img}\n      </a>`:img;} return `  <!-- 2カラムバナー -->\n  <div style="${I.grid2}">\n    <div style="${I.col}">\n      ${byh(b.left)}\n    </div>\n    <div style="${I.col}">\n      ${byh(b.right)}\n    </div>\n  </div>`; }
+    }
+  }).join('\n\n') + '\n\n</div>';
+}
+
+// =====================================================
+// エクスポートモーダル
+// =====================================================
+function getExportTabs() {
+  switch(currentPlatform) {
+    case 'makeshop': return [
+      { id:'ms-full', label:'完全HTML' },
+      { id:'ms-body', label:'本文のみ' },
+    ];
+    case 'rakuten': return [
+      { id:'rk-pc', label:'PC版(style付き)' },
+      { id:'rk-sp', label:'スマホ版(table)' },
+    ];
+    case 'yahoo': return [
+      { id:'yh-inline', label:'インラインCSS版' },
+    ];
+  }
+}
+
+function getExportContent(tabId) {
+  switch(tabId) {
+    case 'ms-full': return exportMakeshopFull();
+    case 'ms-body': return exportMakeshopBody();
+    case 'rk-pc': return exportRakutenPC();
+    case 'rk-sp': return exportRakutenSP();
+    case 'yh-inline': return exportYahoo();
+    default: return '';
+  }
+}
+
+function showExportModal() {
+  const tabs = getExportTabs();
+  currentExportTab = tabs[0].id;
+  const labels = { makeshop:'メイクショップ', rakuten:'楽天市場', yahoo:'ヤフーショッピング' };
+  document.getElementById('exportPlatformLabel').textContent = '- ' + labels[currentPlatform];
+  document.getElementById('exportTabs').innerHTML = tabs.map((t,i) =>
+    `<button class="tab-btn${i===0?' active':''}" onclick="switchTab('${t.id}',this)">${t.label}</button>`
+  ).join('');
+  document.getElementById('exportModal').classList.add('active');
+  updateExportCode();
+}
+
+function closeExportModal() { document.getElementById('exportModal').classList.remove('active'); }
+
+function switchTab(id, btn) {
+  currentExportTab = id;
+  document.querySelectorAll('#exportTabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  updateExportCode();
+}
+
+function updateExportCode() {
+  const code = getExportContent(currentExportTab);
+  document.getElementById('exportCode').value = code;
+  updateStats(code);
+}
+
+// ===== 統計情報（文字数/バイト数/画像数） =====
+function updateStats(code) {
+  const bar = document.getElementById('statsBar');
+  const stats = [];
+  const byteLen = new Blob([code]).size;
+  const charLen = code.length;
+
+  // 画像数カウント
+  const imgCount = (code.match(/<img /gi) || []).length;
+
+  if (currentPlatform === 'rakuten') {
+    // 楽天: 5120全角文字 ≈ 約10240バイト目安
+    const cls = charLen > 10000 ? 'error' : charLen > 8000 ? 'warn' : '';
+    stats.push(`<span class="stat ${cls}">文字数: ${charLen.toLocaleString()}</span>`);
+    stats.push(`<span class="stat">バイト: ${byteLen.toLocaleString()}</span>`);
+    if (currentExportTab === 'rk-sp') {
+      const icls = imgCount > 20 ? 'error' : imgCount > 15 ? 'warn' : '';
+      stats.push(`<span class="stat ${icls}">画像: ${imgCount}/20枚</span>`);
+    }
+  } else if (currentPlatform === 'yahoo') {
+    // ヤフー: 30000バイト
+    const cls = byteLen > 30000 ? 'error' : byteLen > 25000 ? 'warn' : '';
+    stats.push(`<span class="stat ${cls}">バイト: ${byteLen.toLocaleString()}/30,000</span>`);
+    stats.push(`<span class="stat">文字数: ${charLen.toLocaleString()}</span>`);
+  } else {
+    stats.push(`<span class="stat">文字数: ${charLen.toLocaleString()}</span>`);
+    stats.push(`<span class="stat">バイト: ${byteLen.toLocaleString()}</span>`);
+  }
+  bar.innerHTML = stats.join('');
+}
+
+function copyExport() { const t=document.getElementById('exportCode'); t.select(); document.execCommand('copy'); alert('コピーしました'); }
+function downloadExport() {
+  const c=document.getElementById('exportCode').value;
+  const b=new Blob([c],{type:'text/html;charset=utf-8'});
+  const u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download='product-lp.html'; a.click(); URL.revokeObjectURL(u);
+}
+
+// ===== サンプルデータ =====
+function loadSample() {
+  blocks = []; blockIdCounter = 0;
+  addBlock('title'); Object.assign(blocks[0],{nameEn:'AERO GUARD PLUS',carModel:'TOYOTA GR86 / SUBARU BRZ (ZN8/ZD8)',nameJp:'エアロガード プラス フロントリップスポイラー',catchCopy:'空力性能と美しさを両立する、次世代エアロパーツ'});
+  addBlock('image'); Object.assign(blocks[1],{url:'https://image.rakuten.co.jp/example/cabinet/main001.jpg',alt:'AERO GUARD PLUS メイン画像',sizeClass:'img-800-400'});
+  addBlock('band'); blocks[2].text='製品の特長';
+  addBlock('heading-lg'); Object.assign(blocks[3],{heading:'高剛性ウレタン素材を採用',body:'独自開発の高剛性ウレタンを採用し、軽量ながら優れた耐久性を実現しました。\n走行時の空力負荷にも耐える設計で、長期間にわたり美しいフォルムを維持します。'});
+  addBlock('grid2'); Object.assign(blocks[4],{left:{url:'https://image.rakuten.co.jp/example/cabinet/front001.jpg',alt:'フロントビュー',heading:'フロントビュー',body:'低重心デザインがスポーティな印象を強調します。'},right:{url:'https://image.rakuten.co.jp/example/cabinet/side001.jpg',alt:'サイドビュー',heading:'サイドビュー',body:'ボディラインと一体化する流麗なフォルムです。'}});
+  addBlock('band'); blocks[5].text='スペック';
+  addBlock('spec'); blocks[6].rows=[{key:'素材',value:'高剛性ウレタン（PUR）'},{key:'カラー',value:'未塗装（素地）'},{key:'適合車種',value:'TOYOTA GR86 (ZN8) / SUBARU BRZ (ZD8) 2021年〜'}];
+  addBlock('band'); blocks[7].text='注意事項';
+  addBlock('heading-md'); Object.assign(blocks[8],{heading:'取り付けについて',body:'本製品の取り付けには専門知識が必要です。\n必ず認定整備工場での取り付けを推奨いたします。'});
+  renderEditor(); renderPreview();
+}
+
+// 初期描画
+renderEditor(); renderPreview();
+</script>
+</body>
+</html>
