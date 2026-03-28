@@ -336,9 +336,11 @@ function applyPreviewBg(){
   if(!area) return;
   const tc=txtColor('#000'), bc=borderColor();
   area.querySelectorAll('.lp-wrapper').forEach(e=>e.style.backgroundColor=bgColor);
-  area.querySelectorAll('.lp-title-main,.lp-catch,.text-heading-lg,.text-heading-md').forEach(e=>{ if(!e.dataset.customColor) e.style.color=tc; });
-  area.querySelectorAll('.text-body').forEach(e=>{ if(!e.dataset.customColor) e.style.color=tc; });
-  area.querySelectorAll('.lp-band-title').forEach(e=>{ if(!e.dataset.customColor){ e.style.color=tc; e.style.borderTopColor=bc; e.style.borderBottomColor=bc; }});
+  area.querySelectorAll('.lp-title-main,.lp-title-carmodel,.lp-catch,.text-heading-lg,.text-heading-md').forEach(e=>{ if(!e.getAttribute('data-custom-color')) e.style.color=tc; });
+  area.querySelectorAll('.text-body').forEach(e=>{ if(!e.getAttribute('data-custom-color')) e.style.color=tc; });
+  area.querySelectorAll('.lp-band-title').forEach(e=>{ if(!e.getAttribute('data-custom-color')){ e.style.color=tc; } e.style.borderTopColor=bc; e.style.borderBottomColor=bc; });
+  area.querySelectorAll('.lp-spec-table').forEach(e=>e.style.color=tc);
+  area.querySelectorAll('.lp-spec-table th, .lp-spec-table td').forEach(e=>{ if(!e.getAttribute('data-custom-color')) e.style.color=tc; });
 }
 
 // ===== ブロック追加 =====
@@ -473,17 +475,17 @@ function renderPreview(){
 
 function pStyle(b,key,defSize){
   const fs=b[key+'FontSize'], fc=b[key+'FontColor'];
-  let s='';
+  let s='', hasCustomColor=fc&&fc!=='#000000';
   if(fs&&fs!==defSize) s+=`font-size:${fs}pt;`;
-  if(fc&&fc!=='#000000') s+=`color:${fc};`;
-  return s?` style="${s}"`:'';
+  if(hasCustomColor) s+=`color:${fc};`;
+  return (s?` style="${s}"`:'')+(hasCustomColor?' data-custom-color="1"':'');
 }
 function specStyle(b,prefix,defSize){
   const fs=b[prefix+'FontSize'], fc=b[prefix+'FontColor'];
-  let s='';
+  let s='', hasCustomColor=fc&&fc!=='#000000';
   if(fs&&fs!==defSize) s+=`font-size:${fs}pt;`;
-  if(fc&&fc!=='#000000') s+=`color:${fc};`;
-  return s?` style="${s}"`:'';
+  if(hasCustomColor) s+=`color:${fc};`;
+  return (s?` style="${s}"`:'')+(hasCustomColor?' data-custom-color="1"':'');
 }
 function gStyle(d,key,defSize){
   const fs=d[key+'FontSize'], fc=d[key+'FontColor'];
