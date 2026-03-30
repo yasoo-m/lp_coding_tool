@@ -535,7 +535,7 @@ function previewHTML(b){
     case 'img-left': case 'img-right': {
       const img=b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">画像 (388×240)</div>';
       const imgDiv=`<div class="lp-col"><div class="lp-img-wrap img-388-240">${img}</div></div>`;
-      const txtDiv=`<div class="lp-col"><div class="text-heading-md"${pStyle(b,'heading',16)}>${ph(b.heading,'見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div></div>`;
+      const txtDiv=`<div class="lp-col" style="height:240px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><div class="text-heading-md"${pStyle(b,'heading',16)}>${ph(b.heading,'見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div></div>`;
       const linkHtml=b.linkText&&b.linkUrl?`<div class="text-body" style="margin-top:6px;text-align:${b.linkAlign||'left'};width:800px;max-width:100%;"><a href="${esc(b.linkUrl)}" target="_blank" style="color:${txtColor('#000')};text-decoration:underline;">${esc(b.linkText)}</a></div>`:'';
       return `<div class="lp-grid-2">${b.type==='img-left'?imgDiv+txtDiv:txtDiv+imgDiv}</div>${linkHtml}`;}
     case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
@@ -572,7 +572,7 @@ function exportBodyCSS(){
       case 'banner2': {function be(d){const img=`<div class="lp-img-wrap img-388-155">\n      <img src="${esc(d.url)}" alt="${esc(d.alt)}">\n    </div>`;return d.link?`<a class="lp-banner-link" href="${esc(d.link)}" target="_blank">\n    ${img}\n    </a>`:img;} return `<div class="lp-grid-2">\n  <div class="lp-col">\n    ${be(b.left)}\n  </div>\n  <div class="lp-col">\n    ${be(b.right)}\n  </div>\n</div>`;}
       case 'img-left': case 'img-right': {
         const imgCol=`<div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n    </div>\n  </div>`;
-        const txtCol=`<div class="lp-col">\n    <div class="text-heading-md"${expStyle(b,'heading',16,'#000000')}>${esc(b.heading)}</div>\n    <div class="text-body"${expStyle(b,'body',12,'#000000')}>\n      ${nl2br(b.body)}\n    </div>\n  </div>`;
+        const txtCol=`<div class="lp-col" style="height:240px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">\n    <div class="text-heading-md"${expStyle(b,'heading',16,'#000000')}>${esc(b.heading)}</div>\n    <div class="text-body"${expStyle(b,'body',12,'#000000')}>\n      ${nl2br(b.body)}\n    </div>\n  </div>`;
         const lnk=b.linkText&&b.linkUrl?`\n<div class="text-body" style="text-align:${b.linkAlign||'left'};"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
         return `<div class="lp-grid-2">\n  ${b.type==='img-left'?imgCol+'\n  '+txtCol:txtCol+'\n  '+imgCol}\n</div>${lnk}`;}
       case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
@@ -647,7 +647,7 @@ function exportYahoo(){
       case 'banner2': {function byh(d){const img=`<div style="${I.imgWrap388x155}">\n        <img src="${esc(d.url)}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>`;return d.link?`<a href="${esc(d.link)}" style="${I.bannerLink}" target="_blank">\n      ${img}\n      </a>`:img;} return `  <div style="${I.grid2}">\n    <div style="${I.col}">\n      ${byh(b.left)}\n    </div>\n    <div style="${I.col}">\n      ${byh(b.right)}\n    </div>\n  </div>`;}
       case 'img-left': case 'img-right': {
         const imgCol=`<div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n      </div>\n    </div>`;
-        const txtCol=`<div style="${I.col}">\n      <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n      <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">${nl2br(b.body)}</div>\n    </div>`;
+        const txtCol=`<div style="${I.col}height:240px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">\n      <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n      <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">${nl2br(b.body)}</div>\n    </div>`;
         const lnk=b.linkText&&b.linkUrl?`\n  <div style="${I.body}text-align:${b.linkAlign||'left'};"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
         return `  <div style="${I.grid2}">\n    ${b.type==='img-left'?imgCol+'\n    '+txtCol:txtCol+'\n    '+imgCol}\n  </div>${lnk}`;}
       case 'spacer': return `  <div style="height:${b.height||20}px;"></div>`;
