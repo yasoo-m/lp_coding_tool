@@ -86,6 +86,7 @@ body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meir
 .preview-lp .lp-img-wrap { display:block;position:relative;overflow:hidden;margin-bottom:0; }
 .preview-lp .lp-img-wrap img { width:100%;height:100%;object-fit:cover; }
 .preview-lp .img-800-400 { width:800px;max-width:100%;height:400px;margin:0 auto 40px; }
+.preview-lp .img-800-320 { width:800px;max-width:100%;height:320px;margin:0 auto 20px; }
 .preview-lp .img-800-200 { width:800px;max-width:100%;height:200px;margin:0 auto 5px; }
 .preview-lp .img-388-240 { width:388px;max-width:100%;height:240px;margin:0 auto 10px; }
 .preview-lp .img-388-155 { width:388px;max-width:100%;height:155px;margin:0 auto 10px; }
@@ -216,12 +217,14 @@ function getCSS() {
 .lp-img-wrap{display:block;position:relative;overflow:hidden;margin-bottom:0}
 .lp-img-wrap img{width:100%;height:100%;object-fit:cover}
 .img-800-400{width:800px;height:400px;margin:0 auto 40px;object-fit:cover;display:block}
+.img-800-320{width:800px;height:320px;margin:0 auto 20px;object-fit:cover;display:block}
 .img-800-200{width:800px;height:200px;margin:0 auto 5px;object-fit:cover;display:block}
 .img-388-240{width:388px;height:240px;margin:0 auto 10px;object-fit:cover;display:block}
 .img-388-155{width:388px;height:155px;margin:0 auto 10px;object-fit:cover;display:block}
 .lp-banner-link{display:block;text-decoration:none}
 @media screen and (max-width:768px){
 .img-800-400{width:100%;height:auto;aspect-ratio:800/400;margin:0 auto 40px;display:block}
+.img-800-320{width:100%;height:auto;aspect-ratio:800/320;margin:0 auto 20px;display:block}
 .img-800-200{width:100%;height:auto;aspect-ratio:800/200;margin:0 auto 5px;display:block}
 .img-388-240{width:100%;height:auto;aspect-ratio:388/240;margin:0 auto 10px;display:block}
 .img-388-155{width:100%;height:auto;aspect-ratio:388/155;margin:0 auto 10px;display:block}
@@ -259,6 +262,7 @@ function getINLINE() {
     titleJp:`font-weight:600;font-size:9pt;color:${tc2};margin-top:0;margin-bottom:15px;text-align:left;line-height:1.4;`,
     catch:`font-weight:600;font-size:13pt;color:${tc};margin-top:-5px;margin-bottom:15px;text-align:left;line-height:1.4;`,
     imgWrap800x400:'display:block;position:relative;overflow:hidden;width:800px;height:400px;margin:0 auto 40px;',
+    imgWrap800x320:'display:block;position:relative;overflow:hidden;width:800px;height:320px;margin:0 auto 20px;',
     imgWrap800x200:'display:block;position:relative;overflow:hidden;width:800px;height:200px;margin:0 auto 5px;',
     imgWrap388x240:'display:block;position:relative;overflow:hidden;width:388px;height:240px;margin:0 auto 10px;',
     imgWrap388x155:'display:block;position:relative;overflow:hidden;width:388px;height:155px;margin:0 auto 10px;',
@@ -288,7 +292,7 @@ const BLOCK_DEFS = {
   image:{ label:'⑦ 各種画像', fields:[
     {key:'url',label:'画像URL',type:'text',ph:'https://image.rakuten.co.jp/...'},
     {key:'alt',label:'alt属性',type:'text',ph:'商品画像の説明'},
-    {key:'sizeClass',label:'サイズ',type:'select',options:[{value:'img-800-400',label:'800×400'},{value:'img-800-200',label:'800×200'},{value:'img-388-240',label:'388×240'}]},
+    {key:'sizeClass',label:'サイズ',type:'select',options:[{value:'img-800-400',label:'800×400'},{value:'img-800-320',label:'800×320'},{value:'img-800-200',label:'800×200'},{value:'img-388-240',label:'388×240'},{value:'img-custom',label:'カスタム'}]},
   ]},
   band:{ label:'② 帯見出し', textFields:[
     {key:'text',label:'帯テキスト',ph:'製品の特長',defSize:15,defColor:'#000000'},
@@ -360,6 +364,7 @@ function addBlock(type){
   else if(type==='textonly') { data.body=''; data.bodyFontSize=12; data.bodyFontColor='#000000'; data.textAlign='left'; }
   else if(def.textFields) { def.textFields.forEach(f=>{ data[f.key]=''; data[f.key+'FontSize']=f.defSize; data[f.key+'FontColor']=f.defColor; }); }
   else if(def.fields) { def.fields.forEach(f=>{ data[f.key]=f.type==='select'?f.options[0].value:''; }); }
+  if(type==='image') { data.customW=800; data.customH=300; }
   blocks.push(data);
   renderEditor(); renderPreview();
   setTimeout(()=>{const c=document.querySelector(`[data-block-id="${id}"]`);if(c){c.classList.add('open');c.scrollIntoView({behavior:'smooth',block:'nearest'});}},50);
@@ -411,6 +416,7 @@ function renderBlockForm(b){
   if(b.type==='spacer') return renderSpacerForm(b);
   if(b.type==='grid2img') return renderGrid2ImgForm(b);
   if(b.type==='textonly') return renderTextonlyForm(b);
+  if(b.type==='image') return renderImageForm(b);
   const def=BLOCK_DEFS[b.type];
   // textFieldsがあるブロック
   if(def.textFields){
@@ -478,6 +484,17 @@ function renderGrid2ImgForm(b){
     <div class="form-group"><label>alt</label><input type="text" value="${esc(d.alt)}" placeholder="画像の説明" oninput="updateGridField(${b.id},'${side}','alt',this.value)"></div></div>`;}
   return `<div class="col-inputs">${cf('left','左画像')}${cf('right','右画像')}</div>`;
 }
+function renderImageForm(b){
+  const def=BLOCK_DEFS.image;
+  const sizeOpts=def.fields[2].options.map(o=>`<option value="${o.value}"${b.sizeClass===o.value?' selected':''}>${o.label}</option>`).join('');
+  const customFields=b.sizeClass==='img-custom'?`<div style="display:flex;gap:6px;margin-top:4px;">
+    <div class="form-group" style="flex:1;margin-bottom:0;"><label>幅(px)</label><input type="number" value="${b.customW||800}" min="1" oninput="updateField(${b.id},'customW',parseInt(this.value)||800)"></div>
+    <div class="form-group" style="flex:1;margin-bottom:0;"><label>高さ(px)</label><input type="number" value="${b.customH||300}" min="1" oninput="updateField(${b.id},'customH',parseInt(this.value)||300)"></div>
+  </div>`:'';
+  return `<div class="form-group"><label>画像URL</label><input type="text" value="${esc(b.url)}" placeholder="https://image.rakuten.co.jp/..." oninput="updateField(${b.id},'url',this.value)"></div>
+  <div class="form-group"><label>alt属性</label><input type="text" value="${esc(b.alt)}" placeholder="商品画像の説明" oninput="updateField(${b.id},'alt',this.value)"></div>
+  <div class="form-group"><label>サイズ</label><select onchange="updateField(${b.id},'sizeClass',this.value);renderEditor();reopenBlock(${b.id});">${sizeOpts}</select>${customFields}</div>`;
+}
 
 // ===== データ更新 =====
 function updateField(id,k,v){const b=blocks.find(x=>x.id===id);if(b){b[k]=v;renderPreview();}}
@@ -539,7 +556,7 @@ function previewHTML(b){
   const ph=(v,d)=>esc(v)||`<span style="color:#ccc">${d}</span>`;
   switch(b.type){
     case 'title': return `<div class="lp-wrapper"><div class="lp-header-top" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;"><div class="lp-title-main"${pStyle(b,'nameEn',28)}>${ph(b.nameEn,'商品名')}</div><div class="lp-title-carmodel"${pStyle(b,'carModel',14)}>${ph(b.carModel,'車種')}</div></div><div class="lp-title-jp"${pStyle(b,'nameJp',9,'#666666')}>${ph(b.nameJp,'日本語名')}</div><div class="lp-catch"${pStyle(b,'catchCopy',13)}>${ph(b.catchCopy,'コピー')}</div></div>`;
-    case 'image': return `<div class="lp-img-wrap ${b.sizeClass||'img-800-400'}">${b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">画像URLを入力</div>'}</div>`;
+    case 'image': { if(b.sizeClass==='img-custom'){const w=b.customW||800,h=b.customH||300; return `<div class="lp-img-wrap" style="width:${w}px;max-width:100%;height:${h}px;margin:0 auto 20px;">${b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">カスタム ('+w+'×'+h+')</div>'}</div>`;} return `<div class="lp-img-wrap ${b.sizeClass||'img-800-400'}">${b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">画像URLを入力</div>'}</div>`; }
     case 'band': return `<div class="lp-band-title"${pStyle(b,'text',15)}>${ph(b.text,'帯テキスト')}</div>`;
     case 'heading-lg': return `<div class="text-heading-lg"${pStyle(b,'heading',17)}>${ph(b.heading,'大見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div>`;
     case 'heading-md': return `<div class="text-heading-md"${pStyle(b,'heading',16)}>${ph(b.heading,'小見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div>`;
@@ -578,7 +595,7 @@ function exportBodyCSS(){
   return blocks.map(b=>{
     switch(b.type){
       case 'title': return `<div class="lp-wrapper">\n  <div class="lp-header-top" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;">\n    <div class="lp-title-main"${expStyle(b,'nameEn',28,'#000000')}>${esc(b.nameEn)}</div>\n    <div class="lp-title-carmodel"${expStyle(b,'carModel',14,'#000000')}>${esc(b.carModel)}</div>\n  </div>\n  <div class="lp-title-jp"${expStyle(b,'nameJp',9,'#666666')}>${esc(b.nameJp)}</div>\n  <div class="lp-catch"${expStyle(b,'catchCopy',13,'#000000')}>${esc(b.catchCopy)}</div>\n</div>`;
-      case 'image': return `<div class="lp-img-wrap ${b.sizeClass||'img-800-400'}">\n  <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n</div>`;
+      case 'image': { if(b.sizeClass==='img-custom'){const w=b.customW||800,h=b.customH||300; return `<div class="lp-img-wrap" style="width:${w}px;max-width:100%;height:${h}px;margin:0 auto 20px;">\n  <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n</div>`;} return `<div class="lp-img-wrap ${b.sizeClass||'img-800-400'}">\n  <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n</div>`; }
       case 'band': return `<div class="lp-band-title"${expStyle(b,'text',15,'#000000')}>${esc(b.text)}</div>`;
       case 'heading-lg': return `<div class="text-heading-lg"${expStyle(b,'heading',17,'#000000')}>${esc(b.heading)}</div>\n<div class="text-body"${expStyle(b,'body',12,'#000000')}>\n  ${nl2br(b.body)}\n</div>`;
       case 'heading-md': return `<div class="text-heading-md"${expStyle(b,'heading',16,'#000000')}>${esc(b.heading)}</div>\n<div class="text-body"${expStyle(b,'body',12,'#000000')}>\n  ${nl2br(b.body)}\n</div>`;
@@ -655,7 +672,7 @@ function exportYahoo(){
   return `<div style="${I.wrapper}">\n\n`+blocks.map(b=>{
     switch(b.type){
       case 'title': return `  <div style="${I.headerTop}">\n    <div style="${ovr(I.titleMain,b.nameEnFontSize,b.nameEnFontColor,28)}">${esc(b.nameEn)}</div>\n    <div style="${ovr(I.titleCar,b.carModelFontSize,b.carModelFontColor,14)}">${esc(b.carModel)}</div>\n  </div>\n  <div style="${ovr(I.titleJp,b.nameJpFontSize,b.nameJpFontColor,9,'#666')}">${esc(b.nameJp)}</div>\n  <div style="${ovr(I.catch,b.catchCopyFontSize,b.catchCopyFontColor,13)}">${esc(b.catchCopy)}</div>`;
-      case 'image': {const iw=b.sizeClass==='img-800-200'?I.imgWrap800x200:b.sizeClass==='img-388-240'?I.imgWrap388x240:I.imgWrap800x400;return `  <div style="${iw}">\n    <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;}
+      case 'image': {let iw; if(b.sizeClass==='img-custom'){const w=b.customW||800,h=b.customH||300; iw=`display:block;position:relative;overflow:hidden;width:${w}px;height:${h}px;margin:0 auto 20px;`;} else if(b.sizeClass==='img-800-320') iw=I.imgWrap800x320; else if(b.sizeClass==='img-800-200') iw=I.imgWrap800x200; else if(b.sizeClass==='img-388-240') iw=I.imgWrap388x240; else iw=I.imgWrap800x400; return `  <div style="${iw}">\n    <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;}
       case 'band': return `  <div style="${ovr(I.band,b.textFontSize,b.textFontColor,15)}">${esc(b.text)}</div>`;
       case 'heading-lg': return `  <div style="${ovr(I.headingLg,b.headingFontSize,b.headingFontColor,17)}">${esc(b.heading)}</div>\n  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">\n    ${nl2br(b.body)}\n  </div>`;
       case 'heading-md': return `  <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">\n    ${nl2br(b.body)}\n  </div>`;
