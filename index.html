@@ -352,7 +352,7 @@ function addBlock(type){
   if(type==='spec'){ data.rows=[{key:'',value:''},{key:'',value:''},{key:'',value:''}]; data.thFontSize=12; data.thFontColor='#000000'; data.tdFontSize=11; data.tdFontColor='#000000'; }
   else if(type==='grid2') { data.left={url:'',alt:'',heading:'',body:'',headingFontSize:13,headingFontColor:'#000000',bodyFontSize:12,bodyFontColor:'#000000'}; data.right={...data.left}; }
   else if(type==='banner2') { data.left={url:'',alt:'',link:''}; data.right={url:'',alt:'',link:''}; }
-  else if(type==='img-left'||type==='img-right') { data.url=''; data.alt=''; data.heading=''; data.body=''; data.linkText=''; data.linkUrl=''; data.headingFontSize=16; data.headingFontColor='#000000'; data.bodyFontSize=12; data.bodyFontColor='#000000'; }
+  else if(type==='img-left'||type==='img-right') { data.url=''; data.alt=''; data.heading=''; data.body=''; data.linkText=''; data.linkUrl=''; data.linkAlign='left'; data.headingFontSize=16; data.headingFontColor='#000000'; data.bodyFontSize=12; data.bodyFontColor='#000000'; }
   else if(type==='spacer') { data.height=20; }
   else if(def.textFields) { def.textFields.forEach(f=>{ data[f.key]=''; data[f.key+'FontSize']=f.defSize; data[f.key+'FontColor']=f.defColor; }); }
   else if(def.fields) { def.fields.forEach(f=>{ data[f.key]=f.type==='select'?f.options[0].value:''; }); }
@@ -454,7 +454,8 @@ function renderImgTextForm(b){
   <div class="form-group"><label>本文</label><textarea placeholder="説明文..." oninput="updateField(${b.id},'body',this.value)">${b.body||''}</textarea>${fontOptsHTML(b.id,'body',b.bodyFontSize||12,b.bodyFontColor||'#000000')}</div>
   <div style="padding:8px;background:#f0f4ff;border-radius:6px;margin-top:4px;">
     <div class="form-group" style="margin-bottom:4px;"><label>リンクテキスト</label><input type="text" value="${esc(b.linkText)}" placeholder="詳しくはこちら" oninput="updateField(${b.id},'linkText',this.value)"></div>
-    <div class="form-group" style="margin-bottom:0;"><label>リンクURL</label><input type="text" value="${esc(b.linkUrl)}" placeholder="https://..." oninput="updateField(${b.id},'linkUrl',this.value)"></div>
+    <div class="form-group" style="margin-bottom:4px;"><label>リンクURL</label><input type="text" value="${esc(b.linkUrl)}" placeholder="https://..." oninput="updateField(${b.id},'linkUrl',this.value)"></div>
+    <div class="form-group" style="margin-bottom:0;"><label>リンク配置</label><select onchange="updateField(${b.id},'linkAlign',this.value)"><option value="left"${b.linkAlign==='left'?' selected':''}>左側</option><option value="center"${b.linkAlign==='center'?' selected':''}>中央</option><option value="right"${b.linkAlign==='right'?' selected':''}>右側</option></select></div>
   </div>`;
 }
 function renderSpacerForm(b){
@@ -534,9 +535,9 @@ function previewHTML(b){
     case 'img-left': case 'img-right': {
       const img=b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">画像 (388×240)</div>';
       const imgDiv=`<div class="lp-col"><div class="lp-img-wrap img-388-240">${img}</div></div>`;
-      const linkHtml=b.linkText&&b.linkUrl?`<div class="text-body" style="margin-top:6px;"><a href="${esc(b.linkUrl)}" target="_blank" style="color:${txtColor('#000')};text-decoration:underline;">${esc(b.linkText)}</a></div>`:'';
-      const txtDiv=`<div class="lp-col"><div class="text-heading-md"${pStyle(b,'heading',16)}>${ph(b.heading,'見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div>${linkHtml}</div>`;
-      return `<div class="lp-grid-2">${b.type==='img-left'?imgDiv+txtDiv:txtDiv+imgDiv}</div>`;}
+      const txtDiv=`<div class="lp-col"><div class="text-heading-md"${pStyle(b,'heading',16)}>${ph(b.heading,'見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div></div>`;
+      const linkHtml=b.linkText&&b.linkUrl?`<div class="text-body" style="margin-top:6px;text-align:${b.linkAlign||'left'};width:800px;max-width:100%;"><a href="${esc(b.linkUrl)}" target="_blank" style="color:${txtColor('#000')};text-decoration:underline;">${esc(b.linkText)}</a></div>`:'';
+      return `<div class="lp-grid-2">${b.type==='img-left'?imgDiv+txtDiv:txtDiv+imgDiv}</div>${linkHtml}`;}
     case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
   }
 }
@@ -571,9 +572,9 @@ function exportBodyCSS(){
       case 'banner2': {function be(d){const img=`<div class="lp-img-wrap img-388-155">\n      <img src="${esc(d.url)}" alt="${esc(d.alt)}">\n    </div>`;return d.link?`<a class="lp-banner-link" href="${esc(d.link)}" target="_blank">\n    ${img}\n    </a>`:img;} return `<div class="lp-grid-2">\n  <div class="lp-col">\n    ${be(b.left)}\n  </div>\n  <div class="lp-col">\n    ${be(b.right)}\n  </div>\n</div>`;}
       case 'img-left': case 'img-right': {
         const imgCol=`<div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n    </div>\n  </div>`;
-        const lnk=b.linkText&&b.linkUrl?`\n    <div class="text-body"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
-        const txtCol=`<div class="lp-col">\n    <div class="text-heading-md"${expStyle(b,'heading',16,'#000000')}>${esc(b.heading)}</div>\n    <div class="text-body"${expStyle(b,'body',12,'#000000')}>\n      ${nl2br(b.body)}\n    </div>${lnk}\n  </div>`;
-        return `<div class="lp-grid-2">\n  ${b.type==='img-left'?imgCol+'\n  '+txtCol:txtCol+'\n  '+imgCol}\n</div>`;}
+        const txtCol=`<div class="lp-col">\n    <div class="text-heading-md"${expStyle(b,'heading',16,'#000000')}>${esc(b.heading)}</div>\n    <div class="text-body"${expStyle(b,'body',12,'#000000')}>\n      ${nl2br(b.body)}\n    </div>\n  </div>`;
+        const lnk=b.linkText&&b.linkUrl?`\n<div class="text-body" style="text-align:${b.linkAlign||'left'};"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
+        return `<div class="lp-grid-2">\n  ${b.type==='img-left'?imgCol+'\n  '+txtCol:txtCol+'\n  '+imgCol}\n</div>${lnk}`;}
       case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
     }
   }).join('\n\n');
@@ -613,9 +614,10 @@ function exportRakutenSP(){
       case 'img-left': case 'img-right': {
         const fsh=ptToFontSize(b.headingFontSize||16),fch=b.headingFontColor||tc,fsb=ptToFontSize(b.bodyFontSize||12),fcb=b.bodyFontColor||tc;
         const imgPart=`<img src="${esc(b.url)}" alt="${esc(b.alt)}" width="100%" border="0">`;
-        const lnk=b.linkText&&b.linkUrl?`\n<br>\n<a href="${esc(b.linkUrl)}">${esc(b.linkText)}</a>`:'';
-        const txtPart=`<font size="${fsh}" color="${fch}"><b>${esc(b.heading)}</b></font>\n<br>\n<font size="${fsb}" color="${fcb}">${nl2br(b.body)}</font>${lnk}`;
-        return b.type==='img-left'?`${imgPart}\n<br>\n${txtPart}\n<br><br>`:`${txtPart}\n<br>\n${imgPart}\n<br><br>`;}
+        const txtPart=`<font size="${fsh}" color="${fch}"><b>${esc(b.heading)}</b></font>\n<br>\n<font size="${fsb}" color="${fcb}">${nl2br(b.body)}</font>`;
+        const align=b.linkAlign||'left';
+        const lnk=b.linkText&&b.linkUrl?`\n<p align="${align}"><a href="${esc(b.linkUrl)}">${esc(b.linkText)}</a></p>`:'';
+        return b.type==='img-left'?`${imgPart}\n<br>\n${txtPart}\n<br>${lnk}\n<br>`:`${txtPart}\n<br>\n${imgPart}\n<br>${lnk}\n<br>`;}
       case 'spacer': return `<br>`;
     }
   }).join('\n\n');
@@ -645,9 +647,9 @@ function exportYahoo(){
       case 'banner2': {function byh(d){const img=`<div style="${I.imgWrap388x155}">\n        <img src="${esc(d.url)}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>`;return d.link?`<a href="${esc(d.link)}" style="${I.bannerLink}" target="_blank">\n      ${img}\n      </a>`:img;} return `  <div style="${I.grid2}">\n    <div style="${I.col}">\n      ${byh(b.left)}\n    </div>\n    <div style="${I.col}">\n      ${byh(b.right)}\n    </div>\n  </div>`;}
       case 'img-left': case 'img-right': {
         const imgCol=`<div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n      </div>\n    </div>`;
-        const lnk=b.linkText&&b.linkUrl?`\n      <div style="${I.body}"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
-        const txtCol=`<div style="${I.col}">\n      <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n      <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">${nl2br(b.body)}</div>${lnk}\n    </div>`;
-        return `  <div style="${I.grid2}">\n    ${b.type==='img-left'?imgCol+'\n    '+txtCol:txtCol+'\n    '+imgCol}\n  </div>`;}
+        const txtCol=`<div style="${I.col}">\n      <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n      <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">${nl2br(b.body)}</div>\n    </div>`;
+        const lnk=b.linkText&&b.linkUrl?`\n  <div style="${I.body}text-align:${b.linkAlign||'left'};"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
+        return `  <div style="${I.grid2}">\n    ${b.type==='img-left'?imgCol+'\n    '+txtCol:txtCol+'\n    '+imgCol}\n  </div>${lnk}`;}
       case 'spacer': return `  <div style="height:${b.height||20}px;"></div>`;
     }
   }).join('\n\n')+'\n\n</div>';
