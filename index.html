@@ -142,6 +142,7 @@ body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meir
         <button class="palette-btn" onclick="addBlock('img-left')">⑪ 左画像</button>
         <button class="palette-btn" onclick="addBlock('img-right')">⑫ 右画像</button>
         <button class="palette-btn" onclick="addBlock('spacer')">⑬ 隙間</button>
+        <button class="palette-btn" onclick="addBlock('grid2img')">⑭ 2列画像</button>
       </div>
     </div>
     <div class="blocks-list" id="blocksList"></div>
@@ -314,6 +315,7 @@ const BLOCK_DEFS = {
   'img-left':{ label:'⑪ 左画像+見出し+本文', isImgText:true },
   'img-right':{ label:'⑫ 右画像+見出し+本文', isImgText:true },
   spacer:{ label:'⑬ 隙間', isSpacer:true },
+  grid2img:{ label:'⑭ 2カラム画像', isGrid2Img:true },
 };
 
 // ===== ユーティリティ =====
@@ -354,6 +356,7 @@ function addBlock(type){
   else if(type==='banner2') { data.left={url:'',alt:'',link:''}; data.right={url:'',alt:'',link:''}; }
   else if(type==='img-left'||type==='img-right') { data.url=''; data.alt=''; data.heading=''; data.body=''; data.linkText=''; data.linkUrl=''; data.linkAlign='left'; data.headingFontSize=16; data.headingFontColor='#000000'; data.bodyFontSize=12; data.bodyFontColor='#000000'; }
   else if(type==='spacer') { data.height=20; }
+  else if(type==='grid2img') { data.left={url:'',alt:''}; data.right={url:'',alt:''}; }
   else if(type==='textonly') { data.body=''; data.bodyFontSize=12; data.bodyFontColor='#000000'; data.textAlign='left'; }
   else if(def.textFields) { def.textFields.forEach(f=>{ data[f.key]=''; data[f.key+'FontSize']=f.defSize; data[f.key+'FontColor']=f.defColor; }); }
   else if(def.fields) { def.fields.forEach(f=>{ data[f.key]=f.type==='select'?f.options[0].value:''; }); }
@@ -406,6 +409,7 @@ function renderBlockForm(b){
   if(b.type==='banner2') return renderBanner2Form(b);
   if(b.type==='img-left'||b.type==='img-right') return renderImgTextForm(b);
   if(b.type==='spacer') return renderSpacerForm(b);
+  if(b.type==='grid2img') return renderGrid2ImgForm(b);
   if(b.type==='textonly') return renderTextonlyForm(b);
   const def=BLOCK_DEFS[b.type];
   // textFieldsがあるブロック
@@ -467,6 +471,12 @@ function renderSpacerForm(b){
 function renderTextonlyForm(b){
   return `<div class="form-group"><label>本文テキスト</label><textarea placeholder="テキストを入力..." oninput="updateField(${b.id},'body',this.value)">${b.body||''}</textarea>${fontOptsHTML(b.id,'body',b.bodyFontSize||12,b.bodyFontColor||'#000000')}</div>
   <div class="form-group"><label>テキスト配置</label><select onchange="updateField(${b.id},'textAlign',this.value)"><option value="left"${b.textAlign==='left'?' selected':''}>左側</option><option value="center"${b.textAlign==='center'?' selected':''}>中央</option><option value="right"${b.textAlign==='right'?' selected':''}>右側</option></select></div>`;
+}
+function renderGrid2ImgForm(b){
+  function cf(side,lbl){const d=b[side];return `<div class="col-input-group"><h4>${lbl}</h4>
+    <div class="form-group"><label>画像URL</label><input type="text" value="${esc(d.url)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','url',this.value)"></div>
+    <div class="form-group"><label>alt</label><input type="text" value="${esc(d.alt)}" placeholder="画像の説明" oninput="updateGridField(${b.id},'${side}','alt',this.value)"></div></div>`;}
+  return `<div class="col-inputs">${cf('left','左画像')}${cf('right','右画像')}</div>`;
 }
 
 // ===== データ更新 =====
@@ -544,6 +554,7 @@ function previewHTML(b){
       const linkHtml=b.linkText&&b.linkUrl?`<div class="text-body" style="margin-top:6px;text-align:${b.linkAlign||'left'};"><a href="${esc(b.linkUrl)}" target="_blank" style="color:${txtColor('#000')};text-decoration:underline;">${esc(b.linkText)}</a></div>`:'';
       const txtDiv=`<div class="lp-col" style="height:240px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><div class="text-heading-md"${pStyle(b,'heading',16)}>${ph(b.heading,'見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div>${linkHtml}</div>`;
       return `<div class="lp-grid-2">${b.type==='img-left'?imgDiv+txtDiv:txtDiv+imgDiv}</div>`;}
+    case 'grid2img': { function gi(d,l){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:`<div class="img-placeholder">${l}</div>`; return `<div class="lp-col"><div class="lp-img-wrap img-388-240">${img}</div></div>`;} return `<div class="lp-grid-2">${gi(b.left,'左画像')}${gi(b.right,'右画像')}</div>`; }
     case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
   }
 }
@@ -581,6 +592,7 @@ function exportBodyCSS(){
         const lnk=b.linkText&&b.linkUrl?`\n    <div class="text-body" style="text-align:${b.linkAlign||'left'};"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
         const txtCol=`<div class="lp-col" style="height:240px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">\n    <div class="text-heading-md"${expStyle(b,'heading',16,'#000000')}>${esc(b.heading)}</div>\n    <div class="text-body"${expStyle(b,'body',12,'#000000')}>\n      ${nl2br(b.body)}\n    </div>${lnk}\n  </div>`;
         return `<div class="lp-grid-2">\n  ${b.type==='img-left'?imgCol+'\n  '+txtCol:txtCol+'\n  '+imgCol}\n</div>`;}
+      case 'grid2img': return `<div class="lp-grid-2">\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}">\n    </div>\n  </div>\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}">\n    </div>\n  </div>\n</div>`;
       case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
     }
   }).join('\n\n');
@@ -624,6 +636,7 @@ function exportRakutenSP(){
         const align=b.linkAlign||'left';
         const lnk=b.linkText&&b.linkUrl?`\n<p align="${align}"><a href="${esc(b.linkUrl)}">${esc(b.linkText)}</a></p>`:'';
         return b.type==='img-left'?`${imgPart}\n<br>\n${txtPart}\n<br>${lnk}\n<br>`:`${txtPart}\n<br>\n${imgPart}\n<br>${lnk}\n<br>`;}
+      case 'grid2img': return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr>\n    <td width="50%"><img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}" width="100%" border="0"></td>\n    <td width="50%"><img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}" width="100%" border="0"></td>\n  </tr>\n</table>\n<br>`;
       case 'spacer': return `<br>`;
     }
   }).join('\n\n');
@@ -656,6 +669,7 @@ function exportYahoo(){
         const lnk=b.linkText&&b.linkUrl?`\n      <div style="${I.body}text-align:${b.linkAlign||'left'};"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
         const txtCol=`<div style="${I.col}height:240px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">\n      <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n      <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">${nl2br(b.body)}</div>${lnk}\n    </div>`;
         return `  <div style="${I.grid2}">\n    ${b.type==='img-left'?imgCol+'\n    '+txtCol:txtCol+'\n    '+imgCol}\n  </div>`;}
+      case 'grid2img': return `  <div style="${I.grid2}">\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n  </div>`;
       case 'spacer': return `  <div style="height:${b.height||20}px;"></div>`;
     }
   }).join('\n\n')+'\n\n</div>';
