@@ -139,6 +139,9 @@ body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meir
         <button class="palette-btn" onclick="addBlock('banner')">⑧ バナー</button>
         <button class="palette-btn" onclick="addBlock('banner2')">⑨ 2列バナー</button>
         <button class="palette-btn" onclick="addBlock('textonly')">⑩ 本文</button>
+        <button class="palette-btn" onclick="addBlock('img-left')">⑪ 左画像</button>
+        <button class="palette-btn" onclick="addBlock('img-right')">⑫ 右画像</button>
+        <button class="palette-btn" onclick="addBlock('spacer')">⑬ 隙間</button>
       </div>
     </div>
     <div class="blocks-list" id="blocksList"></div>
@@ -308,6 +311,9 @@ const BLOCK_DEFS = {
   textonly:{ label:'⑩ 本文', textFields:[
     {key:'body',label:'本文テキスト',ph:'テキストを入力...',type:'textarea',defSize:12,defColor:'#000000'},
   ]},
+  'img-left':{ label:'⑪ 左画像+見出し+本文', isImgText:true },
+  'img-right':{ label:'⑫ 右画像+見出し+本文', isImgText:true },
+  spacer:{ label:'⑬ 隙間', isSpacer:true },
 };
 
 // ===== ユーティリティ =====
@@ -331,16 +337,12 @@ function changeBgColor(){
 function applyPreviewBg(){
   const c=document.getElementById('previewContainer');
   if(c) c.style.backgroundColor=bgColor;
-  // プレビュー内の動的色変更
   const area=document.getElementById('previewArea');
   if(!area) return;
-  const tc=txtColor('#000'), bc=borderColor();
   area.querySelectorAll('.lp-wrapper').forEach(e=>e.style.backgroundColor=bgColor);
-  area.querySelectorAll('.lp-title-main,.lp-title-carmodel,.lp-catch,.text-heading-lg,.text-heading-md').forEach(e=>{ if(!e.getAttribute('data-custom-color')) e.style.color=tc; });
-  area.querySelectorAll('.text-body').forEach(e=>{ if(!e.getAttribute('data-custom-color')) e.style.color=tc; });
-  area.querySelectorAll('.lp-band-title').forEach(e=>{ if(!e.getAttribute('data-custom-color')){ e.style.color=tc; } e.style.borderTopColor=bc; e.style.borderBottomColor=bc; });
-  area.querySelectorAll('.lp-spec-table').forEach(e=>e.style.color=tc);
-  area.querySelectorAll('.lp-spec-table th, .lp-spec-table td').forEach(e=>{ if(!e.getAttribute('data-custom-color')) e.style.color=tc; });
+  // ボーダー色のみ（テキスト色はpStyle/gStyle/specStyleで直接出力済み）
+  const bc=borderColor();
+  area.querySelectorAll('.lp-band-title').forEach(e=>{ e.style.borderTopColor=bc; e.style.borderBottomColor=bc; });
 }
 
 // ===== ブロック追加 =====
@@ -350,6 +352,8 @@ function addBlock(type){
   if(type==='spec'){ data.rows=[{key:'',value:''},{key:'',value:''},{key:'',value:''}]; data.thFontSize=12; data.thFontColor='#000000'; data.tdFontSize=11; data.tdFontColor='#000000'; }
   else if(type==='grid2') { data.left={url:'',alt:'',heading:'',body:'',headingFontSize:13,headingFontColor:'#000000',bodyFontSize:12,bodyFontColor:'#000000'}; data.right={...data.left}; }
   else if(type==='banner2') { data.left={url:'',alt:'',link:''}; data.right={url:'',alt:'',link:''}; }
+  else if(type==='img-left'||type==='img-right') { data.url=''; data.alt=''; data.heading=''; data.body=''; data.headingFontSize=16; data.headingFontColor='#000000'; data.bodyFontSize=12; data.bodyFontColor='#000000'; }
+  else if(type==='spacer') { data.height=20; }
   else if(def.textFields) { def.textFields.forEach(f=>{ data[f.key]=''; data[f.key+'FontSize']=f.defSize; data[f.key+'FontColor']=f.defColor; }); }
   else if(def.fields) { def.fields.forEach(f=>{ data[f.key]=f.type==='select'?f.options[0].value:''; }); }
   blocks.push(data);
@@ -399,6 +403,8 @@ function renderBlockForm(b){
   if(b.type==='spec') return renderSpecForm(b);
   if(b.type==='grid2') return renderGrid2Form(b);
   if(b.type==='banner2') return renderBanner2Form(b);
+  if(b.type==='img-left'||b.type==='img-right') return renderImgTextForm(b);
+  if(b.type==='spacer') return renderSpacerForm(b);
   const def=BLOCK_DEFS[b.type];
   // textFieldsがあるブロック
   if(def.textFields){
@@ -441,6 +447,16 @@ function renderBanner2Form(b){
     <div class="form-group"><label>リンクURL</label><input type="text" value="${esc(d.link)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','link',this.value)"></div></div>`;}
   return `<div class="col-inputs">${bf('left','左バナー')}${bf('right','右バナー')}</div>`;
 }
+function renderImgTextForm(b){
+  return `<div class="form-group"><label>画像URL</label><input type="text" value="${esc(b.url)}" placeholder="https://..." oninput="updateField(${b.id},'url',this.value)"></div>
+  <div class="form-group"><label>alt属性</label><input type="text" value="${esc(b.alt)}" placeholder="画像の説明" oninput="updateField(${b.id},'alt',this.value)"></div>
+  <div class="form-group"><label>見出し</label><input type="text" value="${esc(b.heading)}" placeholder="見出しテキスト" oninput="updateField(${b.id},'heading',this.value)">${fontOptsHTML(b.id,'heading',b.headingFontSize||16,b.headingFontColor||'#000000')}</div>
+  <div class="form-group"><label>本文</label><textarea placeholder="説明文..." oninput="updateField(${b.id},'body',this.value)">${b.body||''}</textarea>${fontOptsHTML(b.id,'body',b.bodyFontSize||12,b.bodyFontColor||'#000000')}</div>`;
+}
+function renderSpacerForm(b){
+  const opts=[5,10,15,20,25,30,35,40,45,50].map(v=>`<option value="${v}"${b.height===v?' selected':''}>${v}px</option>`).join('');
+  return `<div class="form-group"><label>隙間の高さ</label><select onchange="updateField(${b.id},'height',parseInt(this.value))">${opts}</select></div>`;
+}
 
 // ===== データ更新 =====
 function updateField(id,k,v){const b=blocks.find(x=>x.id===id);if(b){b[k]=v;renderPreview();}}
@@ -473,32 +489,35 @@ function renderPreview(){
   applyPreviewBg();
 }
 
-function pStyle(b,key,defSize){
+// プレビュー用: 背景色を考慮した最終色を直接出力
+function pStyle(b,key,defSize,defColor){
   const fs=b[key+'FontSize'], fc=b[key+'FontColor'];
-  let s='', hasCustomColor=fc&&fc!=='#000000';
+  const dfc=defColor||'#000000';
+  // カスタム色があればそのまま、なければ背景色に応じた色
+  const effectiveColor=(fc&&fc!==dfc)?fc:txtColor(dfc);
+  let s=`color:${effectiveColor};`;
   if(fs&&fs!==defSize) s+=`font-size:${fs}pt;`;
-  if(hasCustomColor) s+=`color:${fc};`;
-  return (s?` style="${s}"`:'')+(hasCustomColor?' data-custom-color="1"':'');
+  return ` style="${s}"`;
 }
 function specStyle(b,prefix,defSize){
   const fs=b[prefix+'FontSize'], fc=b[prefix+'FontColor'];
-  let s='', hasCustomColor=fc&&fc!=='#000000';
+  const effectiveColor=(fc&&fc!=='#000000')?fc:txtColor('#000');
+  let s=`color:${effectiveColor};`;
   if(fs&&fs!==defSize) s+=`font-size:${fs}pt;`;
-  if(hasCustomColor) s+=`color:${fc};`;
-  return (s?` style="${s}"`:'')+(hasCustomColor?' data-custom-color="1"':'');
+  return ` style="${s}"`;
 }
 function gStyle(d,key,defSize){
   const fs=d[key+'FontSize'], fc=d[key+'FontColor'];
-  let s='';
+  const effectiveColor=(fc&&fc!=='#000000')?fc:txtColor('#000');
+  let s=`color:${effectiveColor};`;
   if(fs&&fs!==defSize) s+=`font-size:${fs}pt;`;
-  if(fc&&fc!=='#000000') s+=`color:${fc};`;
-  return s?` style="${s}"`:'';
+  return ` style="${s}"`;
 }
 
 function previewHTML(b){
   const ph=(v,d)=>esc(v)||`<span style="color:#ccc">${d}</span>`;
   switch(b.type){
-    case 'title': return `<div class="lp-wrapper"><div class="lp-header-top" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;"><div class="lp-title-main"${pStyle(b,'nameEn',28)}>${ph(b.nameEn,'商品名')}</div><div class="lp-title-carmodel"${pStyle(b,'carModel',14)}>${ph(b.carModel,'車種')}</div></div><div class="lp-title-jp"${pStyle(b,'nameJp',9)}>${ph(b.nameJp,'日本語名')}</div><div class="lp-catch"${pStyle(b,'catchCopy',13)}>${ph(b.catchCopy,'コピー')}</div></div>`;
+    case 'title': return `<div class="lp-wrapper"><div class="lp-header-top" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;"><div class="lp-title-main"${pStyle(b,'nameEn',28)}>${ph(b.nameEn,'商品名')}</div><div class="lp-title-carmodel"${pStyle(b,'carModel',14)}>${ph(b.carModel,'車種')}</div></div><div class="lp-title-jp"${pStyle(b,'nameJp',9,'#666666')}>${ph(b.nameJp,'日本語名')}</div><div class="lp-catch"${pStyle(b,'catchCopy',13)}>${ph(b.catchCopy,'コピー')}</div></div>`;
     case 'image': return `<div class="lp-img-wrap ${b.sizeClass||'img-800-400'}">${b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">画像URLを入力</div>'}</div>`;
     case 'band': return `<div class="lp-band-title"${pStyle(b,'text',15)}>${ph(b.text,'帯テキスト')}</div>`;
     case 'heading-lg': return `<div class="text-heading-lg"${pStyle(b,'heading',17)}>${ph(b.heading,'大見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div>`;
@@ -508,6 +527,12 @@ function previewHTML(b){
     case 'grid2': function ci(d,l){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:'<div class="img-placeholder">画像</div>'; return `<div class="lp-col"><div class="lp-img-wrap img-388-240">${img}</div><div class="text-heading-md"${gStyle(d,'heading',13)}>${ph(d.heading,l)}</div><div class="text-body"${gStyle(d,'body',12)}>${nl2br(d.body)||'本文'}</div></div>`;} return `<div class="lp-grid-2">${ci(b.left,'左')}${ci(b.right,'右')}</div>`;
     case 'banner': {const img=b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">バナー (388×155)</div>';const inner=`<div class="lp-img-wrap img-388-155">${img}</div>`;return b.link?`<a class="lp-banner-link" href="${esc(b.link)}" target="_blank">${inner}</a>`:inner;}
     case 'banner2': {function bn(d,l){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:`<div class="img-placeholder">${l}</div>`;const inner=`<div class="lp-img-wrap img-388-155">${img}</div>`;return d.link?`<a class="lp-banner-link" href="${esc(d.link)}" target="_blank">${inner}</a>`:inner;} return `<div class="lp-grid-2"><div class="lp-col">${bn(b.left,'左')}</div><div class="lp-col">${bn(b.right,'右')}</div></div>`;}
+    case 'img-left': case 'img-right': {
+      const img=b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">画像 (388×240)</div>';
+      const imgDiv=`<div class="lp-col"><div class="lp-img-wrap img-388-240">${img}</div></div>`;
+      const txtDiv=`<div class="lp-col"><div class="text-heading-md"${pStyle(b,'heading',16)}>${ph(b.heading,'見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div></div>`;
+      return `<div class="lp-grid-2">${b.type==='img-left'?imgDiv+txtDiv:txtDiv+imgDiv}</div>`;}
+    case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
   }
 }
 
@@ -539,6 +564,11 @@ function exportBodyCSS(){
       case 'grid2': return `<div class="lp-grid-2">\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}">\n    </div>\n    <div class="text-heading-md"${expGridStyle(b.left,'heading',13)}>${esc(b.left.heading)}</div>\n    <div class="text-body"${expGridStyle(b.left,'body',12)}>${nl2br(b.left.body)}</div>\n  </div>\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}">\n    </div>\n    <div class="text-heading-md"${expGridStyle(b.right,'heading',13)}>${esc(b.right.heading)}</div>\n    <div class="text-body"${expGridStyle(b.right,'body',12)}>${nl2br(b.right.body)}</div>\n  </div>\n</div>`;
       case 'banner': {const img=`<div class="lp-img-wrap img-388-155">\n  <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n</div>`;return b.link?`<a class="lp-banner-link" href="${esc(b.link)}" target="_blank">\n${img}\n</a>`:img;}
       case 'banner2': {function be(d){const img=`<div class="lp-img-wrap img-388-155">\n      <img src="${esc(d.url)}" alt="${esc(d.alt)}">\n    </div>`;return d.link?`<a class="lp-banner-link" href="${esc(d.link)}" target="_blank">\n    ${img}\n    </a>`:img;} return `<div class="lp-grid-2">\n  <div class="lp-col">\n    ${be(b.left)}\n  </div>\n  <div class="lp-col">\n    ${be(b.right)}\n  </div>\n</div>`;}
+      case 'img-left': case 'img-right': {
+        const imgCol=`<div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n    </div>\n  </div>`;
+        const txtCol=`<div class="lp-col">\n    <div class="text-heading-md"${expStyle(b,'heading',16,'#000000')}>${esc(b.heading)}</div>\n    <div class="text-body"${expStyle(b,'body',12,'#000000')}>\n      ${nl2br(b.body)}\n    </div>\n  </div>`;
+        return `<div class="lp-grid-2">\n  ${b.type==='img-left'?imgCol+'\n  '+txtCol:txtCol+'\n  '+imgCol}\n</div>`;}
+      case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
     }
   }).join('\n\n');
 }
@@ -574,6 +604,12 @@ function exportRakutenSP(){
       case 'grid2': {function gsp(d,side){const fsh=ptToFontSize(d.headingFontSize||13),fch=d.headingFontColor||tc,fsb=ptToFontSize(d.bodyFontSize||12),fcb=d.bodyFontColor||tc; return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr><td>\n    <img src="${esc(d.url)}" alt="${esc(d.alt)}" width="100%" border="0">\n    <br><font size="${fsh}" color="${fch}"><b>${esc(d.heading)}</b></font>\n    <br><font size="${fsb}" color="${fcb}">${nl2br(d.body)}</font>\n  </td></tr>\n</table>\n<br>`;} return gsp(b.left)+'\n\n'+gsp(b.right);}
       case 'banner': {const img=`<img src="${esc(b.url)}" alt="${esc(b.alt)}" width="388" border="0">`;return b.link?`<a href="${esc(b.link)}">${img}</a>\n<br>`:`${img}\n<br>`;}
       case 'banner2': {function bsp(d){const img=`<img src="${esc(d.url)}" alt="${esc(d.alt)}" width="100%" border="0">`;return d.link?`<a href="${esc(d.link)}">${img}</a>`:img;} return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr>\n    <td width="50%">${bsp(b.left)}</td>\n    <td width="50%">${bsp(b.right)}</td>\n  </tr>\n</table>\n<br>`;}
+      case 'img-left': case 'img-right': {
+        const fsh=ptToFontSize(b.headingFontSize||16),fch=b.headingFontColor||tc,fsb=ptToFontSize(b.bodyFontSize||12),fcb=b.bodyFontColor||tc;
+        const imgPart=`<img src="${esc(b.url)}" alt="${esc(b.alt)}" width="100%" border="0">`;
+        const txtPart=`<font size="${fsh}" color="${fch}"><b>${esc(b.heading)}</b></font>\n<br>\n<font size="${fsb}" color="${fcb}">${nl2br(b.body)}</font>`;
+        return b.type==='img-left'?`${imgPart}\n<br>\n${txtPart}\n<br><br>`:`${txtPart}\n<br>\n${imgPart}\n<br><br>`;}
+      case 'spacer': return `<br>`;
     }
   }).join('\n\n');
 }
@@ -600,6 +636,11 @@ function exportYahoo(){
       case 'grid2': {function gyc(d,side){return `    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(d.url)}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>\n      <div style="${ovr(I.colHeading,d.headingFontSize,d.headingFontColor,13)}">${esc(d.heading)}</div>\n      <div style="${ovr(I.body,d.bodyFontSize,d.bodyFontColor,12)}">${nl2br(d.body)}</div>\n    </div>`;} return `  <div style="${I.grid2}">\n${gyc(b.left)}\n${gyc(b.right)}\n  </div>`;}
       case 'banner': {const img=`  <div style="${I.imgWrap388x155}">\n    <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;return b.link?`  <a href="${esc(b.link)}" style="${I.bannerLink}" target="_blank">\n${img}\n  </a>`:img;}
       case 'banner2': {function byh(d){const img=`<div style="${I.imgWrap388x155}">\n        <img src="${esc(d.url)}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>`;return d.link?`<a href="${esc(d.link)}" style="${I.bannerLink}" target="_blank">\n      ${img}\n      </a>`:img;} return `  <div style="${I.grid2}">\n    <div style="${I.col}">\n      ${byh(b.left)}\n    </div>\n    <div style="${I.col}">\n      ${byh(b.right)}\n    </div>\n  </div>`;}
+      case 'img-left': case 'img-right': {
+        const imgCol=`<div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n      </div>\n    </div>`;
+        const txtCol=`<div style="${I.col}">\n      <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n      <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">${nl2br(b.body)}</div>\n    </div>`;
+        return `  <div style="${I.grid2}">\n    ${b.type==='img-left'?imgCol+'\n    '+txtCol:txtCol+'\n    '+imgCol}\n  </div>`;}
+      case 'spacer': return `  <div style="height:${b.height||20}px;"></div>`;
     }
   }).join('\n\n')+'\n\n</div>';
 }
