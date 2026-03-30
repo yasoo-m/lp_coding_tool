@@ -130,19 +130,19 @@ body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meir
       <h3>ブロック追加 <span id="platformLabel" style="color:#4361ee;">[メイクショップ]</span></h3>
       <div class="palette-buttons">
         <button class="palette-btn" onclick="addBlock('title')">① タイトル</button>
-        <button class="palette-btn" onclick="addBlock('image')">② 各種画像</button>
-        <button class="palette-btn" onclick="addBlock('band')">③ 帯見出し</button>
-        <button class="palette-btn" onclick="addBlock('heading-lg')">④ 大見出し+本文</button>
-        <button class="palette-btn" onclick="addBlock('heading-md')">⑤ 小見出し+本文</button>
+        <button class="palette-btn" onclick="addBlock('band')">② 帯見出し</button>
+        <button class="palette-btn" onclick="addBlock('heading-lg')">③ 大見出し+本文</button>
+        <button class="palette-btn" onclick="addBlock('heading-md')">④ 小見出し+本文</button>
+        <button class="palette-btn" onclick="addBlock('textonly')">⑤ 本文</button>
         <button class="palette-btn" onclick="addBlock('spec')">⑥ スペック表</button>
-        <button class="palette-btn" onclick="addBlock('grid2')">⑦ 2カラム+見出し+本文</button>
-        <button class="palette-btn" onclick="addBlock('banner')">⑧ バナー</button>
-        <button class="palette-btn" onclick="addBlock('banner2')">⑨ 2列バナー</button>
-        <button class="palette-btn" onclick="addBlock('textonly')">⑩ 本文</button>
-        <button class="palette-btn" onclick="addBlock('img-left')">⑪ 左画像+見出し+本文</button>
-        <button class="palette-btn" onclick="addBlock('img-right')">⑫ 右画像+見出し+本文</button>
-        <button class="palette-btn" onclick="addBlock('spacer')">⑬ 隙間</button>
-        <button class="palette-btn" onclick="addBlock('grid2img')">⑭ 2列画像</button>
+        <button class="palette-btn" onclick="addBlock('image')">⑦ 各種画像</button>
+        <button class="palette-btn" onclick="addBlock('grid2img')">⑧ 2列画像</button>
+        <button class="palette-btn" onclick="addBlock('img-left')">⑨ 左画像+見出し+本文</button>
+        <button class="palette-btn" onclick="addBlock('img-right')">⑩ 右画像+見出し+本文</button>
+        <button class="palette-btn" onclick="addBlock('grid2')">⑪ 2カラム+見出し+本文</button>
+        <button class="palette-btn" onclick="addBlock('banner')">⑫ バナー</button>
+        <button class="palette-btn" onclick="addBlock('banner2')">⑬ 2列バナー</button>
+        <button class="palette-btn" onclick="addBlock('spacer')">⑭ 隙間</button>
       </div>
     </div>
     <div class="blocks-list" id="blocksList"></div>
@@ -285,37 +285,37 @@ const BLOCK_DEFS = {
     {key:'nameJp',label:'商品名（日本語）',ph:'エアロガード プラス',defSize:9,defColor:'#666666'},
     {key:'catchCopy',label:'キャッチコピー',ph:'空力性能と美しさを両立する',defSize:13,defColor:'#000000'},
   ]},
-  image:{ label:'② 各種画像', fields:[
+  image:{ label:'⑦ 各種画像', fields:[
     {key:'url',label:'画像URL',type:'text',ph:'https://image.rakuten.co.jp/...'},
     {key:'alt',label:'alt属性',type:'text',ph:'商品画像の説明'},
     {key:'sizeClass',label:'サイズ',type:'select',options:[{value:'img-800-400',label:'800×400'},{value:'img-800-200',label:'800×200'},{value:'img-388-240',label:'388×240'}]},
   ]},
-  band:{ label:'③ 帯見出し', textFields:[
+  band:{ label:'② 帯見出し', textFields:[
     {key:'text',label:'帯テキスト',ph:'製品の特長',defSize:15,defColor:'#000000'},
   ]},
-  'heading-lg':{ label:'④ 大見出し＋本文', textFields:[
+  'heading-lg':{ label:'③ 大見出し＋本文', textFields:[
     {key:'heading',label:'見出し',ph:'高剛性ウレタン素材を採用',defSize:17,defColor:'#000000'},
     {key:'body',label:'本文',ph:'説明文...',type:'textarea',defSize:12,defColor:'#000000'},
   ]},
-  'heading-md':{ label:'⑤ 小見出し＋本文', textFields:[
+  'heading-md':{ label:'④ 小見出し＋本文', textFields:[
     {key:'heading',label:'見出し',ph:'取り付け方法について',defSize:16,defColor:'#000000'},
     {key:'body',label:'本文',ph:'説明文...',type:'textarea',defSize:12,defColor:'#000000'},
   ]},
   spec:{ label:'⑥ スペック表', isSpec:true, defThSize:12, defTdSize:11, defColor:'#000000' },
-  grid2:{ label:'⑦ 2カラム+見出し+本文', isGrid:true },
-  banner:{ label:'⑧ バナー', fields:[
+  grid2:{ label:'⑪ 2カラム+見出し+本文', isGrid:true },
+  banner:{ label:'⑫ バナー', fields:[
     {key:'url',label:'画像URL',type:'text',ph:'https://...'},
     {key:'alt',label:'alt属性',type:'text',ph:'バナー説明'},
     {key:'link',label:'リンクURL',type:'text',ph:'https://...'},
   ]},
-  banner2:{ label:'⑨ 2列バナー', isBanner2:true },
-  textonly:{ label:'⑩ 本文', textFields:[
+  banner2:{ label:'⑬ 2列バナー', isBanner2:true },
+  textonly:{ label:'⑤ 本文', textFields:[
     {key:'body',label:'本文テキスト',ph:'テキストを入力...',type:'textarea',defSize:12,defColor:'#000000'},
   ]},
-  'img-left':{ label:'⑪ 左画像+見出し+本文', isImgText:true },
-  'img-right':{ label:'⑫ 右画像+見出し+本文', isImgText:true },
-  spacer:{ label:'⑬ 隙間', isSpacer:true },
-  grid2img:{ label:'⑭ 2列画像', isGrid2Img:true },
+  'img-left':{ label:'⑨ 左画像+見出し+本文', isImgText:true },
+  'img-right':{ label:'⑩ 右画像+見出し+本文', isImgText:true },
+  spacer:{ label:'⑭ 隙間', isSpacer:true },
+  grid2img:{ label:'⑧ 2列画像', isGrid2Img:true },
 };
 
 // ===== ユーティリティ =====
