@@ -329,7 +329,7 @@ const BLOCK_DEFS = {
   youtube:{ label:'⑯ YouTube', fields:[
     {key:'videoId',label:'YouTube動画ID',type:'text',ph:'dQw4w9WgXcQ（URLの v= 以降）'},
     {key:'width',label:'幅(px)',type:'text',ph:'800'},
-    {key:'height',label:'高さ(px)',type:'text',ph:'450'},
+    {key:'height',label:'高さ(px)',type:'text',ph:'451'},
   ]},
 };
 
@@ -373,7 +373,7 @@ function addBlock(type){
   else if(type==='spacer') { data.height=20; }
   else if(type==='grid2img') { data.left={url:'',alt:''}; data.right={url:'',alt:''}; }
   else if(type==='video') { data.url=''; data.width=800; }
-  else if(type==='youtube') { data.videoId=''; data.width=800; data.height=450; }
+  else if(type==='youtube') { data.videoId=''; data.width=800; data.height=451; }
   else if(type==='textonly') { data.body=''; data.bodyFontSize=12; data.bodyFontColor='#000000'; data.textAlign='left'; }
   else if(def.textFields) { def.textFields.forEach(f=>{ data[f.key]=''; data[f.key+'FontSize']=f.defSize; data[f.key+'FontColor']=f.defColor; }); }
   else if(def.fields) { def.fields.forEach(f=>{ data[f.key]=f.type==='select'?f.options[0].value:''; }); }
@@ -518,7 +518,7 @@ function renderYoutubeForm(b){
   return `<div class="form-group"><label>YouTube動画ID</label><input type="text" value="${esc(b.videoId)}" placeholder="dQw4w9WgXcQ（URLのv=以降）" oninput="updateField(${b.id},'videoId',this.value)"></div>
   <div style="display:flex;gap:6px;">
     <div class="form-group" style="flex:1;"><label>幅(px)</label><input type="number" value="${b.width||800}" min="1" oninput="updateField(${b.id},'width',parseInt(this.value)||800)"></div>
-    <div class="form-group" style="flex:1;"><label>高さ(px)</label><input type="number" value="${b.height||450}" min="1" oninput="updateField(${b.id},'height',parseInt(this.value)||450)"></div>
+    <div class="form-group" style="flex:1;"><label>高さ(px)</label><input type="number" value="${b.height||451}" min="1" oninput="updateField(${b.id},'height',parseInt(this.value)||451)"></div>
   </div>`;
 }
 
@@ -600,7 +600,7 @@ function previewHTML(b){
     case 'grid2img': { function gi(d,l){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:`<div class="img-placeholder">${l}</div>`; return `<div class="lp-col"><div class="lp-img-wrap img-388-240">${img}</div></div>`;} return `<div class="lp-grid-2">${gi(b.left,'左画像')}${gi(b.right,'右画像')}</div>`; }
     case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
     case 'video': { const w=b.width||800; return b.url?`<div style="max-width:${w}px;margin:0 auto 20px;"><video width="100%" controls><source src="${esc(b.url)}" type="video/mp4"></video></div>`:'<div class="img-placeholder" style="height:200px;">MP4動画URLを入力</div>'; }
-    case 'youtube': { const w=b.width||800,h=b.height||450; return b.videoId?`<div style="max-width:${w}px;margin:0 auto 20px;"><iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe></div>`:'<div class="img-placeholder" style="height:200px;">YouTube動画IDを入力</div>'; }
+    case 'youtube': { const w=b.width||800,h=b.height||451; return b.videoId?`<div style="max-width:${w}px;margin:0 auto 20px;"><iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe></div>`:'<div class="img-placeholder" style="height:200px;">YouTube動画IDを入力</div>'; }
   }
 }
 
@@ -640,7 +640,7 @@ function exportBodyCSS(){
       case 'grid2img': return `<div class="lp-grid-2">\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}">\n    </div>\n  </div>\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}">\n    </div>\n  </div>\n</div>`;
       case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
       case 'video': { const w=b.width||800; return `<div style="max-width:${w}px;margin:0 auto 20px;">\n  <video width="100%" controls>\n    <source src="${esc(b.url)}" type="video/mp4">\n  </video>\n</div>`; }
-      case 'youtube': { const w=b.width||800,h=b.height||450; return `<div style="max-width:${w}px;margin:0 auto 20px;">\n  <iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>\n</div>`; }
+      case 'youtube': { const w=b.width||800,h=b.height||451; return `<div style="max-width:${w}px;margin:0 auto 20px;">\n  <iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>\n</div>`; }
     }
   }).join('\n\n');
 }
@@ -721,7 +721,7 @@ function exportYahoo(){
       case 'grid2img': return `  <div style="${I.grid2}">\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n  </div>`;
       case 'spacer': return `  <div style="height:${b.height||20}px;"></div>`;
       case 'video': { const w=b.width||800; return `  <div style="max-width:${w}px;margin:0 auto 20px;">\n    <video width="100%" controls>\n      <source src="${esc(b.url)}" type="video/mp4">\n    </video>\n  </div>`; }
-      case 'youtube': { const w=b.width||800,h=b.height||450; return `  <div style="max-width:${w}px;margin:0 auto 20px;">\n    <iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>\n  </div>`; }
+      case 'youtube': { const w=b.width||800,h=b.height||451; return `  <div style="max-width:${w}px;margin:0 auto 20px;">\n    <iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>\n  </div>`; }
     }
   }).join('\n\n')+'\n\n</div>';
 }
