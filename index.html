@@ -651,6 +651,30 @@ function exportBodyCSS(){
 // ===== エクスポート: メイクショップ =====
 function exportMakeshopFull(){return `<!DOCTYPE html>\n<html lang="ja">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>Product LP</title>\n<style>\n${getCSS()}\n</style>\n</head>\n<body>\n\n${exportBodyCSS()}\n\n</body>\n</html>`;}
 
+// ===== エクスポート: メイクショップ商品説明用 =====
+function exportMakeshopDesc(){
+  let css = getCSS();
+  // テキスト要素のwidth:800pxを100%に変更（コンテナ幅に追従）
+  css = css.replace(/(\.lp-band-title\{[^}]*?)width:800px/, '$1width:100%');
+  css = css.replace(/(\.text-heading-lg\{[^}]*?)width:800px/, '$1width:100%');
+  css = css.replace(/(\.text-heading-md\{[^}]*?)width:800px/, '$1width:100%');
+  css = css.replace(/(\.text-body\{[^}]*?)width:800px/, '$1width:100%');
+  css = css.replace(/(\.lp-grid-2\{[^}]*?)width:800px/, '$1width:100%');
+  // 画像サイズクラスにmax-width:100%追加（はみ出し防止）
+  css = css.replace(/\.img-800-400\{(width:800px);/, '.img-800-400{$1;max-width:100%;');
+  css = css.replace(/\.img-800-320\{(width:800px);/, '.img-800-320{$1;max-width:100%;');
+  css = css.replace(/\.img-800-200\{(width:800px);/, '.img-800-200{$1;max-width:100%;');
+  // .lp-wrapper自体のmax-widthはそのまま800px（中央寄せ）
+
+  const reset = `/* MakeShop親CSS上書き */
+.lp-wrapper{text-align:left!important}
+.lp-wrapper img{max-width:100%!important}
+.lp-wrapper p{margin-bottom:0}
+.lp-wrapper span{position:static;background:none}
+`;
+  return `<style>\n${reset}${css}\n</style>\n\n<div class="lp-wrapper">\n${exportBodyCSS()}\n</div>`;
+}
+
 // ===== エクスポート: 楽天PC =====
 function exportRakutenPC(){return `<style>\n${getCSS()}\n</style>\n\n${exportBodyCSS()}`;}
 
@@ -732,13 +756,14 @@ function exportYahoo(){
 // ===== エクスポートモーダル =====
 function getExportTabs(){
   switch(currentPlatform){
-    case 'makeshop': return [{id:'ms-full',label:'完全HTML'},{id:'ms-body',label:'本文のみ'}];
+    case 'makeshop': return [{id:'ms-desc',label:'商品説明用'},{id:'ms-full',label:'完全HTML'},{id:'ms-body',label:'本文のみ'}];
     case 'rakuten': return [{id:'rk-pc',label:'PC版(style付き)'},{id:'rk-sp',label:'スマホ版(table)'}];
     case 'yahoo': return [{id:'yh-inline',label:'インラインCSS版'}];
   }
 }
 function getExportContent(t){
   switch(t){
+    case 'ms-desc': return exportMakeshopDesc();
     case 'ms-full': return exportMakeshopFull();
     case 'ms-body': return exportBodyCSS();
     case 'rk-pc': return exportRakutenPC();
