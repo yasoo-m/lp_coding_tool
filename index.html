@@ -723,9 +723,26 @@ function exportRakutenSP(){
   }).join('\n\n');
 }
 
-// ===== エクスポート: ヤフー（インラインCSS） =====
-function exportYahoo(){
+// ===== エクスポート: ヤフー（インラインCSS / PC・SP共通ロジック） =====
+function exportYahoo(mobile){
   const I=getINLINE();
+  if(mobile){
+    // SP用: 全幅100%、画像はアスペクト比維持、グリッドは縦積み
+    I.wrapper=I.wrapper.replace('max-width:800px','max-width:100%');
+    I.imgWrap800x400='display:block;overflow:hidden;width:100%;margin:0 auto 40px;';
+    I.imgWrap800x320='display:block;overflow:hidden;width:100%;margin:0 auto 20px;';
+    I.imgWrap800x200='display:block;overflow:hidden;width:100%;margin:0 auto 5px;';
+    I.imgWrap388x240='display:block;overflow:hidden;width:100%;margin:0 auto 10px;';
+    I.imgWrap388x155='display:block;overflow:hidden;width:100%;margin:0 auto 10px;';
+    I.imgInner='width:100%;height:auto;';
+    I.band=I.band.replace('width:800px;','width:100%;');
+    I.headingLg=I.headingLg.replace('width:800px;','width:100%;');
+    I.headingMd=I.headingMd.replace('width:800px;','width:100%;');
+    I.body=I.body.replace('width:800px;','width:100%;');
+    I.grid2=I.grid2.replace('display:flex;','display:block;').replace('width:800px;','width:100%;');
+    I.col='width:100%;max-width:100%;text-align:left;margin-bottom:20px;';
+    I.specTable=I.specTable.replace('max-width:800px','max-width:100%');
+  }
   // インラインCSS内のfont-size/colorをオーバーライド
   function ovr(base,fs,fc,defSize,defColor){
     let s=base;
@@ -736,7 +753,7 @@ function exportYahoo(){
   return `<div style="${I.wrapper}">\n\n`+blocks.map(b=>{
     switch(b.type){
       case 'title': return `  <div style="${I.headerTop}">\n    <div style="${ovr(I.titleMain,b.nameEnFontSize,b.nameEnFontColor,28)}">${esc(b.nameEn)}</div>\n    <div style="${ovr(I.titleCar,b.carModelFontSize,b.carModelFontColor,14)}">${esc(b.carModel)}</div>\n  </div>\n  <div style="${ovr(I.titleJp,b.nameJpFontSize,b.nameJpFontColor,9,'#666')}">${esc(b.nameJp)}</div>\n  <div style="${ovr(I.catch,b.catchCopyFontSize,b.catchCopyFontColor,13)}">${esc(b.catchCopy)}</div>`;
-      case 'image': {let iw; if(b.sizeClass==='img-custom'){const w=b.customW||800,h=b.customH||300; iw=`display:block;position:relative;overflow:hidden;width:${w}px;height:${h}px;margin:0 auto 20px;`;} else if(b.sizeClass==='img-800-320') iw=I.imgWrap800x320; else if(b.sizeClass==='img-800-200') iw=I.imgWrap800x200; else if(b.sizeClass==='img-388-240') iw=I.imgWrap388x240; else iw=I.imgWrap800x400; return `  <div style="${iw}">\n    <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;}
+      case 'image': {let iw; if(b.sizeClass==='img-custom'){const w=b.customW||800,h=b.customH||300; iw=mobile?`display:block;overflow:hidden;width:100%;margin:0 auto 20px;`:`display:block;position:relative;overflow:hidden;width:${w}px;height:${h}px;margin:0 auto 20px;`;} else if(b.sizeClass==='img-800-320') iw=I.imgWrap800x320; else if(b.sizeClass==='img-800-200') iw=I.imgWrap800x200; else if(b.sizeClass==='img-388-240') iw=I.imgWrap388x240; else iw=I.imgWrap800x400; return `  <div style="${iw}">\n    <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;}
       case 'band': return `  <div style="${ovr(I.band,b.textFontSize,b.textFontColor,15)}">${esc(b.text)}</div>`;
       case 'heading-lg': return `  <div style="${ovr(I.headingLg,b.headingFontSize,b.headingFontColor,17)}">${esc(b.heading)}</div>\n  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">\n    ${nl2br(b.body)}\n  </div>`;
       case 'heading-md': return `  <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">\n    ${nl2br(b.body)}\n  </div>`;
@@ -749,22 +766,25 @@ function exportYahoo(){
       case 'img-left': case 'img-right': {
         const imgCol=`<div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n      </div>\n    </div>`;
         const lnk=b.linkText&&b.linkUrl?`\n      <div style="${I.body}text-align:${b.linkAlign||'left'};"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
-        const txtCol=`<div style="${I.col}height:240px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;">\n      <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n      <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">${nl2br(b.body)}</div>${lnk}\n    </div>`;
-        return `  <div style="${I.grid2}">\n    ${b.type==='img-left'?imgCol+'\n    '+txtCol:txtCol+'\n    '+imgCol}\n  </div>`;}
+        const txtColStyle=mobile?I.col:I.col+'height:240px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;';
+        const txtCol=`<div style="${txtColStyle}">\n      <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n      <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">${nl2br(b.body)}</div>${lnk}\n    </div>`;
+        return mobile?`  ${imgCol}\n  ${txtCol}`:`  <div style="${I.grid2}">\n    ${b.type==='img-left'?imgCol+'\n    '+txtCol:txtCol+'\n    '+imgCol}\n  </div>`;}
       case 'grid2img': return `  <div style="${I.grid2}">\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n  </div>`;
       case 'spacer': return `  <div style="height:${b.height||20}px;"></div>`;
-      case 'video': { const w=b.width||800; return `  <div style="max-width:${w}px;margin:0 auto 20px;">\n    <video width="100%" controls>\n      <source src="${esc(b.url)}" type="video/mp4">\n    </video>\n  </div>`; }
-      case 'youtube': { const w=b.width||800,h=b.height||451; return `  <div style="max-width:${w}px;margin:0 auto 20px;">\n    <iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>\n  </div>`; }
+      case 'video': { const w=mobile?'100%':b.width||800; const mw=mobile?'100%':`${w}px`; return `  <div style="max-width:${mw};margin:0 auto 20px;">\n    <video width="100%" controls>\n      <source src="${esc(b.url)}" type="video/mp4">\n    </video>\n  </div>`; }
+      case 'youtube': { const w=mobile?'100%':b.width||800; const mw=mobile?'100%':`${w}px`; const h=b.height||451; return `  <div style="max-width:${mw};margin:0 auto 20px;">\n    <iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>\n  </div>`; }
     }
   }).join('\n\n')+'\n\n</div>';
 }
+function exportYahooPC(){ return exportYahoo(false); }
+function exportYahooSP(){ return exportYahoo(true); }
 
 // ===== エクスポートモーダル =====
 function getExportTabs(){
   switch(currentPlatform){
     case 'makeshop': return [{id:'ms-desc',label:'商品説明用'},{id:'ms-full',label:'完全HTML'},{id:'ms-body',label:'本文のみ'}];
     case 'rakuten': return [{id:'rk-pc',label:'PC版(style付き)'},{id:'rk-sp',label:'スマホ版(table)'}];
-    case 'yahoo': return [{id:'yh-inline',label:'インラインCSS版'}];
+    case 'yahoo': return [{id:'yh-pc',label:'PC用フリースペース'},{id:'yh-sp',label:'スマホ用フリースペース'}];
   }
 }
 function getExportContent(t){
@@ -774,7 +794,8 @@ function getExportContent(t){
     case 'ms-body': return exportBodyCSS();
     case 'rk-pc': return exportRakutenPC();
     case 'rk-sp': return exportRakutenSP();
-    case 'yh-inline': return exportYahoo();
+    case 'yh-pc': return exportYahooPC();
+    case 'yh-sp': return exportYahooSP();
     default: return '';
   }
 }
