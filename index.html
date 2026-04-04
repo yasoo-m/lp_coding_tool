@@ -121,6 +121,8 @@ body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meir
     <button class="btn btn-outline" onclick="loadSample()">サンプル</button>
     <button class="btn btn-success btn-sm" onclick="saveProject()">保存</button>
     <button class="btn btn-outline btn-sm" onclick="showLoadModal()">読込</button>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">インポート</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(this)">
     <button class="btn btn-warning" onclick="showExportModal()">エクスポート</button>
     <button class="btn btn-danger btn-sm" onclick="clearAll()">全クリア</button>
   </div>
@@ -164,7 +166,7 @@ body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meir
   <div class="modal">
     <div class="modal-header"><h2>HTMLエクスポート <span id="exportPlatformLabel" style="font-size:12px;color:#4361ee;"></span></h2><button class="modal-close" onclick="closeModal('exportModal')">&times;</button></div>
     <div class="modal-body"><div class="tab-bar" id="exportTabs"></div><textarea id="exportCode" readonly></textarea></div>
-    <div class="modal-footer"><div class="stats-bar" id="statsBar"></div><div style="display:flex;gap:6px;"><button class="btn btn-primary" onclick="copyExport()">コピー</button><button class="btn btn-success" onclick="downloadExport()">DL</button></div></div>
+    <div class="modal-footer"><div class="stats-bar" id="statsBar"></div><div style="display:flex;gap:6px;"><button class="btn btn-primary" onclick="copyExport()">コピー</button><button class="btn btn-success" onclick="downloadExport()">DL</button><button class="btn btn-warning" onclick="downloadAllExport()">一括DL</button></div></div>
   </div>
 </div>
 <!-- 読込モーダル -->
@@ -854,6 +856,57 @@ function updateStats(code){
 function closeModal(id){document.getElementById(id).classList.remove('active');}
 function copyExport(){const t=document.getElementById('exportCode');t.select();document.execCommand('copy');alert('コピーしました');}
 function downloadExport(){const c=document.getElementById('exportCode').value;const b=new Blob([c],{type:'text/html;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='product-lp.html';a.click();URL.revokeObjectURL(u);}
+
+// ===== 一括エクスポート/インポート =====
+function downloadAllExport(){
+  const data={
+    version:1,
+    exportDate:new Date().toISOString().slice(0,10),
+    platform:currentPlatform,
+    bgColor:bgColor,
+    blocks:JSON.parse(JSON.stringify(blocks)),
+    blockIdCounter:blockIdCounter,
+    html:{
+      'ms-desc':exportMakeshopDesc(),
+      'ms-full':exportMakeshopFull(),
+      'rk-pc':exportRakutenPC(),
+      'rk-sp':exportRakutenSP(),
+      'yh-pc':exportYahooPC(),
+      'yh-sp':exportYahooSP()
+    }
+  };
+  const json=JSON.stringify(data,null,2);
+  const blob=new Blob([json],{type:'application/json;charset=utf-8'});
+  const u=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=u;
+  a.download=`lp-export-${data.exportDate}.json`;
+  a.click();
+  URL.revokeObjectURL(u);
+  alert('一括エクスポートしました');
+}
+function importProject(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.blocks||!Array.isArray(data.blocks)){alert('無効なファイルです');return;}
+      blocks=data.blocks;
+      blockIdCounter=data.blockIdCounter||0;
+      currentPlatform=data.platform||'makeshop';
+      bgColor=data.bgColor||'#ffffff';
+      document.getElementById('platformSelect').value=currentPlatform;
+      document.getElementById('bgColorSelect').value=bgColor;
+      changePlatform();changeBgColor();
+      renderEditor();renderPreview();
+      alert('インポートしました（ブロック数: '+blocks.length+'）');
+    }catch(err){alert('ファイルの読み込みに失敗しました: '+err.message);}
+  };
+  reader.readAsText(file);
+  input.value='';
+}
 
 // ===== 保存/読込 (localStorage, 最大20件) =====
 function getSaves(){try{return JSON.parse(localStorage.getItem('lp_saves'))||[];}catch(e){return [];}}
