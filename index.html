@@ -260,13 +260,15 @@ function getCSS() {
 // ===== インラインCSS（ヤフー用・動的） =====
 function getINLINE() {
   const tc=txtColor('#000'), bc=borderColor(), tc2=txtColor('#666');
+  const fk=`font-family:'Kozuka Gothic Pr6N',sans-serif;`;
+  const fh=`font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans','Yu Gothic',sans-serif;`;
   return {
-    wrapper:`width:100%;max-width:800px;margin:0 auto;padding:0;border:none;background-color:${bgColor};text-align:left;overflow-x:hidden;box-sizing:border-box;`,
+    wrapper:`width:100%;max-width:800px;margin:0 auto;padding:0;border:none;background-color:${bgColor};text-align:left;overflow-x:hidden;box-sizing:border-box;${fh}`,
     headerTop:'display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;',
-    titleMain:`font-weight:900;font-size:28pt;color:${tc};line-height:1.0;text-align:left;`,
-    titleCar:`font-weight:900;font-size:14pt;color:${tc};line-height:1.0;text-align:right;`,
-    titleJp:`font-weight:600;font-size:9pt;color:${tc2};margin-top:0;margin-bottom:15px;text-align:left;line-height:1.4;`,
-    catch:`font-weight:600;font-size:13pt;color:${tc};margin-top:-5px;margin-bottom:15px;text-align:left;line-height:1.4;`,
+    titleMain:`${fk}font-weight:900;font-size:28pt;color:${tc};line-height:1.0;text-align:left;`,
+    titleCar:`${fk}font-weight:900;font-size:14pt;color:${tc};line-height:1.0;text-align:right;`,
+    titleJp:`${fh}font-weight:600;font-size:9pt;color:${tc2};margin-top:0;margin-bottom:15px;text-align:left;line-height:1.4;`,
+    catch:`${fh}font-weight:600;font-size:13pt;color:${tc};margin-top:-5px;margin-bottom:15px;text-align:left;line-height:1.4;`,
     imgWrap800x400:'display:block;position:relative;overflow:hidden;width:800px;height:400px;margin:0 auto 40px;',
     imgWrap800x320:'display:block;position:relative;overflow:hidden;width:800px;height:320px;margin:0 auto 20px;',
     imgWrap800x200:'display:block;position:relative;overflow:hidden;width:800px;height:200px;margin:0 auto 5px;',
@@ -274,16 +276,16 @@ function getINLINE() {
     imgWrap388x155:'display:block;position:relative;overflow:hidden;width:388px;height:155px;margin:0 auto 10px;',
     bannerLink:'display:block;text-decoration:none;',
     imgInner:'width:100%;height:100%;object-fit:cover;',
-    band:`font-weight:300;font-size:15pt;color:${tc};border-top:1px solid ${bc};border-bottom:1px solid ${bc};padding:12px 0;margin:60px auto 30px;text-align:center;width:800px;max-width:100%;box-sizing:border-box;line-height:1.6;`,
-    headingLg:`font-weight:600;font-size:17pt;color:${tc};width:800px;max-width:100%;margin:0 auto 10px;line-height:1.4;text-align:left;`,
-    headingMd:`font-weight:600;font-size:16pt;color:${tc};width:800px;max-width:100%;margin:0 auto 10px;line-height:1.4;text-align:left;`,
-    body:`font-weight:300;font-size:12pt;color:${tc};width:800px;max-width:100%;margin:0 auto 10px;line-height:1.6;text-align:left;`,
+    band:`${fh}font-weight:300;font-size:15pt;color:${tc};border-top:1px solid ${bc};border-bottom:1px solid ${bc};padding:12px 0;margin:60px auto 30px;text-align:center;width:800px;max-width:100%;box-sizing:border-box;line-height:1.6;`,
+    headingLg:`${fh}font-weight:600;font-size:17pt;color:${tc};width:800px;max-width:100%;margin:0 auto 10px;line-height:1.4;text-align:left;`,
+    headingMd:`${fh}font-weight:600;font-size:16pt;color:${tc};width:800px;max-width:100%;margin:0 auto 10px;line-height:1.4;text-align:left;`,
+    body:`${fh}font-weight:300;font-size:12pt;color:${tc};width:800px;max-width:100%;margin:0 auto 10px;line-height:1.6;text-align:left;`,
     grid2:'display:flex;justify-content:space-between;width:800px;max-width:100%;gap:0;margin:0 auto 30px;',
     col:'width:388px;max-width:48%;text-align:left;',
-    colHeading:`font-weight:700;font-size:13pt;color:${tc};margin:0 auto 10px;line-height:1.4;text-align:left;`,
+    colHeading:`${fh}font-weight:700;font-size:13pt;color:${tc};margin:0 auto 10px;line-height:1.4;text-align:left;`,
     specTable:`width:100%;max-width:800px;border-collapse:collapse;color:${tc};margin:0 auto 30px;`,
-    specTh:'font-weight:300;font-size:12pt;padding:16px;text-align:center;width:30%;vertical-align:middle;',
-    specTd:'font-weight:300;font-size:11pt;padding:16px;vertical-align:middle;text-align:left;',
+    specTh:`${fh}font-weight:300;font-size:12pt;padding:16px;text-align:center;width:30%;vertical-align:middle;`,
+    specTd:`${fh}font-weight:300;font-size:11pt;padding:16px;vertical-align:middle;text-align:left;`,
   };
 }
 
