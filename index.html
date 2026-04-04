@@ -517,17 +517,20 @@ function renderGrid2ImgForm(b){
 }
 function renderImageForm(b){
   const def=BLOCK_DEFS.image;
-  const sizeOpts=def.fields[2].options.map(o=>`<option value="${o.value}"${b.sizeClass===o.value?' selected':''}>${o.label}</option>`).join('');
+  const sizeField=def.fields.find(f=>f.key==='sizeClass');
+  const sizeOpts=sizeField.options.map(o=>`<option value="${o.value}"${b.sizeClass===o.value?' selected':''}>${o.label}</option>`).join('');
   const customFields=b.sizeClass==='img-custom'?`<div style="display:flex;gap:6px;margin-top:4px;">
     <div class="form-group" style="flex:1;margin-bottom:0;"><label>幅(px)</label><input type="number" value="${b.customW||800}" min="1" oninput="updateField(${b.id},'customW',parseInt(this.value)||800)"></div>
     <div class="form-group" style="flex:1;margin-bottom:0;"><label>高さ(px)</label><input type="number" value="${b.customH||300}" min="1" oninput="updateField(${b.id},'customH',parseInt(this.value)||300)"></div>
   </div>`:'';
-  return `<div class="form-group"><label>画像URL</label><input type="text" value="${esc(b.url)}" placeholder="https://image.rakuten.co.jp/..." oninput="updateField(${b.id},'url',this.value)"></div>
+  return `<div class="form-group"><label>画像URL（MS+楽天）</label><input type="text" value="${esc(b.url)}" placeholder="https://image.rakuten.co.jp/..." oninput="updateField(${b.id},'url',this.value)"></div>
+  <div class="form-group"><label>画像URL（ヤフー用）</label><input type="text" value="${esc(b.urlYahoo||'')}" placeholder="空欄でMS+楽天を使用" oninput="updateField(${b.id},'urlYahoo',this.value)"></div>
   <div class="form-group"><label>alt属性</label><input type="text" value="${esc(b.alt)}" placeholder="商品画像の説明" oninput="updateField(${b.id},'alt',this.value)"></div>
   <div class="form-group"><label>サイズ</label><select onchange="updateField(${b.id},'sizeClass',this.value);renderEditor();reopenBlock(${b.id});">${sizeOpts}</select>${customFields}</div>`;
 }
 function renderVideoForm(b){
-  return `<div class="form-group"><label>MP4動画URL</label><input type="text" value="${esc(b.url)}" placeholder="https://...video.mp4" oninput="updateField(${b.id},'url',this.value)"></div>
+  return `<div class="form-group"><label>MP4動画URL（MS+楽天）</label><input type="text" value="${esc(b.url)}" placeholder="https://...video.mp4" oninput="updateField(${b.id},'url',this.value)"></div>
+  <div class="form-group"><label>MP4動画URL（ヤフー用）</label><input type="text" value="${esc(b.urlYahoo||'')}" placeholder="空欄でMS+楽天を使用" oninput="updateField(${b.id},'urlYahoo',this.value)"></div>
   <div class="form-group"><label>幅(px)</label><input type="number" value="${b.width||800}" min="1" oninput="updateField(${b.id},'width',parseInt(this.value)||800)"></div>`;
 }
 function renderYoutubeForm(b){
@@ -798,7 +801,7 @@ function exportYahooSP(){ return exportYahoo(true); }
 // ===== エクスポートモーダル =====
 function getExportTabs(){
   switch(currentPlatform){
-    case 'makeshop': return [{id:'ms-desc',label:'商品説明用'},{id:'ms-full',label:'完全HTML'},{id:'ms-body',label:'本文のみ'}];
+    case 'makeshop': return [{id:'ms-desc',label:'商品説明用'},{id:'ms-full',label:'完全HTML'}];
     case 'rakuten': return [{id:'rk-pc',label:'PC版(style付き)'},{id:'rk-sp',label:'スマホ版(table)'}];
     case 'yahoo': return [{id:'yh-pc',label:'PC用フリースペース'},{id:'yh-sp',label:'スマホ用フリースペース'}];
   }
@@ -807,7 +810,7 @@ function getExportContent(t){
   switch(t){
     case 'ms-desc': return exportMakeshopDesc();
     case 'ms-full': return exportMakeshopFull();
-    case 'ms-body': return exportBodyCSS();
+
     case 'rk-pc': return exportRakutenPC();
     case 'rk-sp': return exportRakutenSP();
     case 'yh-pc': return exportYahooPC();
