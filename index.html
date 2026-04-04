@@ -121,7 +121,7 @@ body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meir
     <button class="btn btn-outline" onclick="loadSample()">サンプル</button>
     <button class="btn btn-success btn-sm" onclick="saveProject()">保存</button>
     <button class="btn btn-outline btn-sm" onclick="showLoadModal()">読込</button>
-    <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">インポート</button>
+    <button class="btn" style="background:#888;color:#fff;" onclick="document.getElementById('importFile').click()">インポート</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(this)">
     <button class="btn btn-warning" onclick="showExportModal()">エクスポート</button>
     <button class="btn btn-danger btn-sm" onclick="clearAll()">全クリア</button>
