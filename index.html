@@ -294,7 +294,8 @@ const BLOCK_DEFS = {
     {key:'catchCopy',label:'キャッチコピー',ph:'空力性能と美しさを両立する',defSize:13,defColor:'#000000'},
   ]},
   image:{ label:'⑦ 各種画像', fields:[
-    {key:'url',label:'画像URL',type:'text',ph:'https://image.rakuten.co.jp/...'},
+    {key:'url',label:'画像URL（MS+楽天）',type:'text',ph:'https://image.rakuten.co.jp/...'},
+    {key:'urlYahoo',label:'画像URL（ヤフー用・空欄でMS+楽天を使用）',type:'text',ph:'https://item-shopping.c.yimg.jp/...'},
     {key:'alt',label:'alt属性',type:'text',ph:'商品画像の説明'},
     {key:'sizeClass',label:'サイズ',type:'select',options:[{value:'img-800-400',label:'800×400'},{value:'img-800-320',label:'800×320'},{value:'img-800-200',label:'800×200'},{value:'img-388-240',label:'388×240'},{value:'img-custom',label:'カスタム'}]},
   ]},
@@ -303,8 +304,8 @@ const BLOCK_DEFS = {
   ]},
   'heading-lg':{ label:'③ 大見出し＋本文', textFields:[
     {key:'heading',label:'見出し',ph:'高剛性ウレタン素材を採用',defSize:17,defColor:'#000000'},
-    {key:'body',label:'本文①',ph:'説明文...',type:'textarea',defSize:12,defColor:'#000000'},
-    {key:'body2',label:'本文②（空欄で非表示）',ph:'追加説明文...',type:'textarea',defSize:12,defColor:'#000000'},
+    {key:'body',label:'本文①',ph:'説明文...',type:'textarea',defSize:13,defColor:'#000000'},
+    {key:'body2',label:'本文②（空欄で非表示）',ph:'追加説明文...',type:'textarea',defSize:13,defColor:'#000000'},
   ]},
   'heading-md':{ label:'④ 小見出し＋本文', textFields:[
     {key:'heading',label:'見出し',ph:'取り付け方法について',defSize:16,defColor:'#000000'},
@@ -315,7 +316,8 @@ const BLOCK_DEFS = {
   grid2:{ label:'⑬ 2カラム+見出し+本文', isGrid:true },
   grid2rev:{ label:'⑬-2 2カラム(テキスト上)', isGrid:true },
   banner:{ label:'⑨ バナー', fields:[
-    {key:'url',label:'画像URL',type:'text',ph:'https://...'},
+    {key:'url',label:'画像URL（MS+楽天）',type:'text',ph:'https://...'},
+    {key:'urlYahoo',label:'画像URL（ヤフー用・空欄でMS+楽天を使用）',type:'text',ph:'https://...'},
     {key:'alt',label:'alt属性',type:'text',ph:'バナー説明'},
     {key:'link',label:'リンクURL',type:'text',ph:'https://...'},
   ]},
@@ -328,7 +330,8 @@ const BLOCK_DEFS = {
   spacer:{ label:'⑭ 隙間', isSpacer:true },
   grid2img:{ label:'⑧ 2列画像', isGrid2Img:true },
   video:{ label:'⑮ MP4動画', fields:[
-    {key:'url',label:'MP4動画URL',type:'text',ph:'https://...video.mp4'},
+    {key:'url',label:'MP4動画URL（MS+楽天）',type:'text',ph:'https://...video.mp4'},
+    {key:'urlYahoo',label:'MP4動画URL（ヤフー用・空欄でMS+楽天を使用）',type:'text',ph:'https://...video.mp4'},
     {key:'width',label:'幅(px)',type:'text',ph:'800'},
   ]},
   youtube:{ label:'⑯ YouTube', fields:[
@@ -373,13 +376,13 @@ function applyPreviewBg(){
 function addBlock(type){
   const id=++blockIdCounter, data={id,type};
   const def=BLOCK_DEFS[type];
-  if(type==='spec'){ data.rows=[{key:'',value:'',value2:''},{key:'',value:'',value2:''},{key:'',value:'',value2:''}]; data.thFontSize=12; data.thFontColor='#000000'; data.tdFontSize=11; data.tdFontColor='#000000'; }
-  else if(type==='grid2'||type==='grid2rev') { data.left={url:'',alt:'',heading:'',body:'',body2:'',headingFontSize:13,headingFontColor:'#000000',bodyFontSize:12,bodyFontColor:'#000000',body2FontSize:12,body2FontColor:'#000000'}; data.right={...data.left}; }
-  else if(type==='banner2') { data.left={url:'',alt:'',link:''}; data.right={url:'',alt:'',link:''}; }
-  else if(type==='img-left'||type==='img-right') { data.url=''; data.alt=''; data.heading=''; data.body=''; data.linkText=''; data.linkUrl=''; data.linkAlign='left'; data.headingFontSize=16; data.headingFontColor='#000000'; data.bodyFontSize=12; data.bodyFontColor='#000000'; }
+  if(type==='spec'){ data.rows=[{key:'',value:'',value2:''},{key:'',value:'',value2:''},{key:'',value:'',value2:''}]; data.thFontSize=12; data.thFontColor='#000000'; data.tdFontSize=11; data.tdFontColor='#000000'; data.td2FontSize=11; data.td2FontColor='#000000'; }
+  else if(type==='grid2'||type==='grid2rev') { data.left={url:'',urlYahoo:'',alt:'',heading:'',body:'',body2:'',headingFontSize:14,headingFontColor:'#000000',bodyFontSize:13,bodyFontColor:'#000000',body2FontSize:13,body2FontColor:'#000000'}; data.right={...data.left}; }
+  else if(type==='banner2') { data.left={url:'',urlYahoo:'',alt:'',link:''}; data.right={url:'',urlYahoo:'',alt:'',link:''}; }
+  else if(type==='img-left'||type==='img-right') { data.url=''; data.urlYahoo=''; data.alt=''; data.heading=''; data.body=''; data.linkText=''; data.linkUrl=''; data.linkAlign='left'; data.headingFontSize=17; data.headingFontColor='#000000'; data.bodyFontSize=14; data.bodyFontColor='#000000'; }
   else if(type==='spacer') { data.height=20; }
-  else if(type==='grid2img') { data.left={url:'',alt:''}; data.right={url:'',alt:''}; }
-  else if(type==='video') { data.url=''; data.width=800; }
+  else if(type==='grid2img') { data.left={url:'',urlYahoo:'',alt:''}; data.right={url:'',urlYahoo:'',alt:''}; }
+  else if(type==='video') { data.url=''; data.urlYahoo=''; data.width=800; }
   else if(type==='youtube') { data.videoId=''; data.width=800; data.height=451; }
   else if(type==='textonly') { data.body=''; data.bodyFontSize=12; data.bodyFontColor='#000000'; data.textAlign='left'; }
   else if(def.textFields) { def.textFields.forEach(f=>{ data[f.key]=''; data[f.key+'FontSize']=f.defSize; data[f.key+'FontColor']=f.defColor; }); }
@@ -463,12 +466,14 @@ function renderSpecForm(b){
   return `<div>${b.rows.map((r,i)=>`<div class="spec-row"><input type="text" value="${esc(r.key)}" placeholder="項目名" oninput="updateSpecRow(${b.id},${i},'key',this.value)"><textarea style="min-height:28px;height:28px;" placeholder="値①" oninput="updateSpecRow(${b.id},${i},'value',this.value)">${esc(r.value)}</textarea><textarea style="min-height:28px;height:28px;" placeholder="値②（空欄で非表示）" oninput="updateSpecRow(${b.id},${i},'value2',this.value)">${esc(r.value2||'')}</textarea><button class="remove-row-btn" onclick="removeSpecRow(${b.id},${i})">&times;</button></div>`).join('')}</div><button class="btn btn-primary" style="font-size:10px;padding:3px 10px;margin-top:4px;" onclick="addSpecRow(${b.id})">+ 行追加</button>
   <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:6px;">
     <div class="form-group" style="margin-bottom:4px;"><label>項目名(TH)</label>${fontOptsHTML(b.id,'th',b.thFontSize||12,b.thFontColor||'#000000')}</div>
-    <div class="form-group" style="margin-bottom:0;"><label>値(TD)</label>${fontOptsHTML(b.id,'td',b.tdFontSize||11,b.tdFontColor||'#000000')}</div>
+    <div class="form-group" style="margin-bottom:4px;"><label>値①(TD)</label>${fontOptsHTML(b.id,'td',b.tdFontSize||11,b.tdFontColor||'#000000')}</div>
+    <div class="form-group" style="margin-bottom:0;"><label>値②(TD2)</label>${fontOptsHTML(b.id,'td2',b.td2FontSize||11,b.td2FontColor||'#000000')}</div>
   </div>`;
 }
 function renderGrid2Form(b){
   function cf(side,lbl){const d=b[side];return `<div class="col-input-group"><h4>${lbl}</h4>
-    <div class="form-group"><label>画像URL</label><input type="text" value="${esc(d.url)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','url',this.value)"></div>
+    <div class="form-group"><label>画像URL（MS+楽天）</label><input type="text" value="${esc(d.url)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','url',this.value)"></div>
+    <div class="form-group"><label>画像URL（ヤフー用）</label><input type="text" value="${esc(d.urlYahoo||'')}" placeholder="空欄でMS+楽天を使用" oninput="updateGridField(${b.id},'${side}','urlYahoo',this.value)"></div>
     <div class="form-group"><label>alt</label><input type="text" value="${esc(d.alt)}" placeholder="説明" oninput="updateGridField(${b.id},'${side}','alt',this.value)"></div>
     <div class="form-group"><label>見出し</label><input type="text" value="${esc(d.heading)}" placeholder="見出し" oninput="updateGridField(${b.id},'${side}','heading',this.value)">${gridFontOptsHTML(b.id,side,'heading',d.headingFontSize||13,d.headingFontColor||'#000000')}</div>
     <div class="form-group"><label>本文①</label><textarea placeholder="説明文" oninput="updateGridField(${b.id},'${side}','body',this.value)">${d.body||''}</textarea>${gridFontOptsHTML(b.id,side,'body',d.bodyFontSize||12,d.bodyFontColor||'#000000')}</div>
@@ -477,13 +482,15 @@ function renderGrid2Form(b){
 }
 function renderBanner2Form(b){
   function bf(side,lbl){const d=b[side];return `<div class="col-input-group"><h4>${lbl}</h4>
-    <div class="form-group"><label>画像URL</label><input type="text" value="${esc(d.url)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','url',this.value)"></div>
+    <div class="form-group"><label>画像URL（MS+楽天）</label><input type="text" value="${esc(d.url)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','url',this.value)"></div>
+    <div class="form-group"><label>画像URL（ヤフー用）</label><input type="text" value="${esc(d.urlYahoo||'')}" placeholder="空欄でMS+楽天を使用" oninput="updateGridField(${b.id},'${side}','urlYahoo',this.value)"></div>
     <div class="form-group"><label>alt</label><input type="text" value="${esc(d.alt)}" placeholder="説明" oninput="updateGridField(${b.id},'${side}','alt',this.value)"></div>
     <div class="form-group"><label>リンクURL</label><input type="text" value="${esc(d.link)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','link',this.value)"></div></div>`;}
   return `<div class="col-inputs">${bf('left','左バナー')}${bf('right','右バナー')}</div>`;
 }
 function renderImgTextForm(b){
-  return `<div class="form-group"><label>画像URL</label><input type="text" value="${esc(b.url)}" placeholder="https://..." oninput="updateField(${b.id},'url',this.value)"></div>
+  return `<div class="form-group"><label>画像URL（MS+楽天）</label><input type="text" value="${esc(b.url)}" placeholder="https://..." oninput="updateField(${b.id},'url',this.value)"></div>
+  <div class="form-group"><label>画像URL（ヤフー用）</label><input type="text" value="${esc(b.urlYahoo||'')}" placeholder="空欄でMS+楽天を使用" oninput="updateField(${b.id},'urlYahoo',this.value)"></div>
   <div class="form-group"><label>alt属性</label><input type="text" value="${esc(b.alt)}" placeholder="画像の説明" oninput="updateField(${b.id},'alt',this.value)"></div>
   <div class="form-group"><label>見出し</label><input type="text" value="${esc(b.heading)}" placeholder="見出しテキスト" oninput="updateField(${b.id},'heading',this.value)">${fontOptsHTML(b.id,'heading',b.headingFontSize||16,b.headingFontColor||'#000000')}</div>
   <div class="form-group"><label>本文</label><textarea placeholder="説明文..." oninput="updateField(${b.id},'body',this.value)">${b.body||''}</textarea>${fontOptsHTML(b.id,'body',b.bodyFontSize||12,b.bodyFontColor||'#000000')}</div>
@@ -503,7 +510,8 @@ function renderTextonlyForm(b){
 }
 function renderGrid2ImgForm(b){
   function cf(side,lbl){const d=b[side];return `<div class="col-input-group"><h4>${lbl}</h4>
-    <div class="form-group"><label>画像URL</label><input type="text" value="${esc(d.url)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','url',this.value)"></div>
+    <div class="form-group"><label>画像URL（MS+楽天）</label><input type="text" value="${esc(d.url)}" placeholder="https://..." oninput="updateGridField(${b.id},'${side}','url',this.value)"></div>
+    <div class="form-group"><label>画像URL（ヤフー用）</label><input type="text" value="${esc(d.urlYahoo||'')}" placeholder="空欄でMS+楽天を使用" oninput="updateGridField(${b.id},'${side}','urlYahoo',this.value)"></div>
     <div class="form-group"><label>alt</label><input type="text" value="${esc(d.alt)}" placeholder="画像の説明" oninput="updateGridField(${b.id},'${side}','alt',this.value)"></div></div>`;}
   return `<div class="col-inputs">${cf('left','左画像')}${cf('right','右画像')}</div>`;
 }
@@ -596,7 +604,7 @@ function previewHTML(b){
     case 'heading-md': return `<div class="text-heading-md"${pStyle(b,'heading',16)}>${ph(b.heading,'小見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div>${b.body2?`<div class="text-body"${pStyle(b,'body2',12)}>${nl2br(b.body2)}</div>`:''}`;
 
     case 'textonly': { const ps=pStyle(b,'body',12); const al=b.textAlign&&b.textAlign!=='left'?`text-align:${b.textAlign};`:''; return al?`<div class="text-body" style="${ps.match(/style="([^"]*)"/)[1]}${al}">${nl2br(b.body)||'本文テキスト'}</div>`:`<div class="text-body"${ps}>${nl2br(b.body)||'本文テキスト'}</div>`; }
-    case 'spec': { const thS=specStyle(b,'th',12), tdS=specStyle(b,'td',11); const sr=b.rows.filter(r=>r.key||r.value).map(r=>`<tr><th${thS}>${esc(r.key)}</th><td${tdS}>${nl2br(r.value)}${r.value2?'<br>\n    '+nl2br(r.value2):''}</td></tr>`).join('\n'); return `<table class="lp-spec-table"><tbody>${sr||`<tr><th${thS}>項目</th><td${tdS}>値</td></tr>`}</tbody></table>`; }
+    case 'spec': { const thS=specStyle(b,'th',12), tdS=specStyle(b,'td',11), td2S=specStyle(b,'td2',11); const sr=b.rows.filter(r=>r.key||r.value).map(r=>`<tr><th${thS}>${esc(r.key)}</th><td${tdS}>${nl2br(r.value)}${r.value2?`<br><span${td2S}>${nl2br(r.value2)}</span>`:''}</td></tr>`).join('\n'); return `<table class="lp-spec-table"><tbody>${sr||`<tr><th${thS}>項目</th><td${tdS}>値</td></tr>`}</tbody></table>`; }
     case 'grid2': function ci(d,l){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:'<div class="img-placeholder">画像</div>'; const b2=d.body2?`<div class="text-body"${gStyle(d,'body2',12)}>${nl2br(d.body2)}</div>`:''; return `<div class="lp-col"><div class="lp-img-wrap img-388-240">${img}</div><div class="text-heading-md"${gStyle(d,'heading',13)}>${ph(d.heading,l)}</div><div class="text-body"${gStyle(d,'body',12)}>${nl2br(d.body)||'本文'}</div>${b2}</div>`;} return `<div class="lp-grid-2">${ci(b.left,'左')}${ci(b.right,'右')}</div>`;
     case 'grid2rev': function cr(d,l){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:'<div class="img-placeholder">画像</div>'; const b2=d.body2?`<div class="text-body"${gStyle(d,'body2',12)}>${nl2br(d.body2)}</div>`:''; return `<div class="lp-col"><div class="text-heading-md"${gStyle(d,'heading',13)}>${ph(d.heading,l)}</div><div class="text-body"${gStyle(d,'body',12)}>${nl2br(d.body)||'本文'}</div>${b2}<div class="lp-img-wrap img-388-240">${img}</div></div>`;} return `<div class="lp-grid-2">${cr(b.left,'左')}${cr(b.right,'右')}</div>`;
     case 'banner': {const img=b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:'<div class="img-placeholder">バナー (388×155)</div>';const inner=`<div class="lp-img-wrap img-388-155">${img}</div>`;return b.link?`<a class="lp-banner-link" href="${esc(b.link)}" target="_blank">${inner}</a>`:inner;}
@@ -629,7 +637,7 @@ function expGridStyle(d,key,defSize){
 }
 
 // ===== エクスポート: CSSクラス版本文HTML =====
-function exportBodyCSS(){
+function exportBodyCSS(skipYoutube){
   return blocks.map(b=>{
     switch(b.type){
       case 'title': return `<div class="lp-wrapper">\n  <div class="lp-header-top" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;">\n    <div class="lp-title-main"${expStyle(b,'nameEn',28,'#000000')}>${esc(b.nameEn)}</div>\n    <div class="lp-title-carmodel"${expStyle(b,'carModel',14,'#000000')}>${esc(b.carModel)}</div>\n  </div>\n  <div class="lp-title-jp"${expStyle(b,'nameJp',9,'#666666')}>${esc(b.nameJp)}</div>\n  <div class="lp-catch"${expStyle(b,'catchCopy',13,'#000000')}>${esc(b.catchCopy)}</div>\n</div>`;
@@ -639,7 +647,7 @@ function exportBodyCSS(){
       case 'heading-md': return `<div class="text-heading-md"${expStyle(b,'heading',16,'#000000')}>${esc(b.heading)}</div>\n<div class="text-body"${expStyle(b,'body',12,'#000000')}>\n  ${nl2br(b.body)}\n</div>${b.body2?`\n<div class="text-body"${expStyle(b,'body2',12,'#000000')}>\n  ${nl2br(b.body2)}\n</div>`:''}`;
 
       case 'textonly': { const al=b.textAlign&&b.textAlign!=='left'?` style="text-align:${b.textAlign};"`:expStyle(b,'body',12,'#000000'); const s=b.textAlign&&b.textAlign!=='left'?(() => {const e=expStyle(b,'body',12,'#000000'); return e?e.replace('style="',`style="text-align:${b.textAlign};`):` style="text-align:${b.textAlign};"`})():expStyle(b,'body',12,'#000000'); return `<div class="text-body"${s}>\n  ${nl2br(b.body)}\n</div>`; }
-      case 'spec': { const thS=expStyle(b,'th',12,'#000000'), tdS=expStyle(b,'td',11,'#000000'); const rows=b.rows.filter(r=>r.key||r.value).map(r=>`    <tr>\n      <th${thS}>${esc(r.key)}</th>\n      <td${tdS}>${nl2br(r.value)}${r.value2?'<br>\n      '+nl2br(r.value2):''}</td>\n    </tr>`).join('\n'); return `<table class="lp-spec-table">\n  <tbody>\n${rows}\n  </tbody>\n</table>`; }
+      case 'spec': { const thS=expStyle(b,'th',12,'#000000'), tdS=expStyle(b,'td',11,'#000000'), td2S=expStyle(b,'td2',11,'#000000'); const rows=b.rows.filter(r=>r.key||r.value).map(r=>`    <tr>\n      <th${thS}>${esc(r.key)}</th>\n      <td${tdS}>${nl2br(r.value)}${r.value2?`<br>\n      <span${td2S}>${nl2br(r.value2)}</span>`:''}</td>\n    </tr>`).join('\n'); return `<table class="lp-spec-table">\n  <tbody>\n${rows}\n  </tbody>\n</table>`; }
       case 'grid2': { const lb2=b.left.body2?`\n    <div class="text-body"${expGridStyle(b.left,'body2',12)}>${nl2br(b.left.body2)}</div>`:''; const rb2=b.right.body2?`\n    <div class="text-body"${expGridStyle(b.right,'body2',12)}>${nl2br(b.right.body2)}</div>`:''; return `<div class="lp-grid-2">\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}">\n    </div>\n    <div class="text-heading-md"${expGridStyle(b.left,'heading',13)}>${esc(b.left.heading)}</div>\n    <div class="text-body"${expGridStyle(b.left,'body',12)}>${nl2br(b.left.body)}</div>${lb2}\n  </div>\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}">\n    </div>\n    <div class="text-heading-md"${expGridStyle(b.right,'heading',13)}>${esc(b.right.heading)}</div>\n    <div class="text-body"${expGridStyle(b.right,'body',12)}>${nl2br(b.right.body)}</div>${rb2}\n  </div>\n</div>`; }
       case 'grid2rev': { const lb2=b.left.body2?`\n    <div class="text-body"${expGridStyle(b.left,'body2',12)}>${nl2br(b.left.body2)}</div>`:''; const rb2=b.right.body2?`\n    <div class="text-body"${expGridStyle(b.right,'body2',12)}>${nl2br(b.right.body2)}</div>`:''; return `<div class="lp-grid-2">\n  <div class="lp-col">\n    <div class="text-heading-md"${expGridStyle(b.left,'heading',13)}>${esc(b.left.heading)}</div>\n    <div class="text-body"${expGridStyle(b.left,'body',12)}>${nl2br(b.left.body)}</div>${lb2}\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}">\n    </div>\n  </div>\n  <div class="lp-col">\n    <div class="text-heading-md"${expGridStyle(b.right,'heading',13)}>${esc(b.right.heading)}</div>\n    <div class="text-body"${expGridStyle(b.right,'body',12)}>${nl2br(b.right.body)}</div>${rb2}\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}">\n    </div>\n  </div>\n</div>`; }
       case 'banner': {const img=`<div class="lp-img-wrap img-388-155">\n  <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n</div>`;return b.link?`<a class="lp-banner-link" href="${esc(b.link)}" target="_blank">\n${img}\n</a>`:img;}
@@ -652,9 +660,9 @@ function exportBodyCSS(){
       case 'grid2img': return `<div class="lp-grid-2">\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}">\n    </div>\n  </div>\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}">\n    </div>\n  </div>\n</div>`;
       case 'spacer': return `<div style="height:${b.height||20}px;"></div>`;
       case 'video': { const w=b.width||800; return `<div style="max-width:${w}px;margin:0 auto 20px;">\n  <video width="100%" controls>\n    <source src="${esc(b.url)}" type="video/mp4">\n  </video>\n</div>`; }
-      case 'youtube': { const w=b.width||800,h=b.height||451; return `<div style="max-width:${w}px;margin:0 auto 20px;">\n  <iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>\n</div>`; }
+      case 'youtube': if(skipYoutube) return ''; { const w=b.width||800,h=b.height||451; return `<div style="max-width:${w}px;margin:0 auto 20px;">\n  <iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>\n</div>`; }
     }
-  }).join('\n\n');
+  }).filter(s=>s).join('\n\n');
 }
 
 // ===== エクスポート: メイクショップ =====
@@ -685,7 +693,7 @@ function exportMakeshopDesc(){
 }
 
 // ===== エクスポート: 楽天PC =====
-function exportRakutenPC(){return `<style>\n${getCSS()}\n</style>\n\n${exportBodyCSS()}`;}
+function exportRakutenPC(){return `<style>\n${getCSS()}\n</style>\n\n${exportBodyCSS(true)}`;}
 
 // ===== 楽天SPヘルパー: fontサイズ変換（pt→font size属性） =====
 function ptToFontSize(pt){
@@ -708,7 +716,7 @@ function exportRakutenSP(){
       case 'heading-lg': {const fch=b.headingFontColor||tc, fsh=ptToFontSize(b.headingFontSize||17), fcb=b.bodyFontColor||tc, fsb=ptToFontSize(b.bodyFontSize||12); const b2sp=b.body2?`\n<font size="${ptToFontSize(b.body2FontSize||12)}" color="${b.body2FontColor||tc}">${nl2br(b.body2)}</font>`:''; return `<font size="${fsh}" color="${fch}"><b>${esc(b.heading)}</b></font>\n<br>\n<font size="${fsb}" color="${fcb}">${nl2br(b.body)}</font>${b2sp}\n<br><br>`;}
       case 'heading-md': {const fch=b.headingFontColor||tc, fsh=ptToFontSize(b.headingFontSize||16), fcb=b.bodyFontColor||tc, fsb=ptToFontSize(b.bodyFontSize||12); const b2sp=b.body2?`\n<font size="${ptToFontSize(b.body2FontSize||12)}" color="${b.body2FontColor||tc}">${nl2br(b.body2)}</font>`:''; return `<font size="${fsh}" color="${fch}"><b>${esc(b.heading)}</b></font>\n<br>\n<font size="${fsb}" color="${fcb}">${nl2br(b.body)}</font>${b2sp}\n<br><br>`;}
       case 'textonly': {const fc=b.bodyFontColor||tc, fs=ptToFontSize(b.bodyFontSize||12), al=b.textAlign||'left'; return al==='left'?`<font size="${fs}" color="${fc}">${nl2br(b.body)}</font>\n<br><br>`:`<p align="${al}"><font size="${fs}" color="${fc}">${nl2br(b.body)}</font></p>\n<br>`;}
-      case 'spec': { const ss=specStripe().replace('#',''); const fsTh=ptToFontSize(b.thFontSize||12), fcTh=b.thFontColor||tc, fsTd=ptToFontSize(b.tdFontSize||11), fcTd=b.tdFontColor||tc; const rows=b.rows.filter(r=>r.key||r.value).map((r,i)=>{const bg=i%2===0?` bgcolor="#${ss}"`:'';const v2=r.value2?`<br><font size="${fsTd}" color="${fcTd}">${esc(r.value2)}</font>`:'';return `  <tr${bg}>\n    <th width="30%" align="center"><font size="${fsTh}" color="${fcTh}">${esc(r.key)}</font></th>\n    <td><font size="${fsTd}" color="${fcTd}">${esc(r.value)}</font>${v2}</td>\n  </tr>`;}).join('\n'); return `<table width="100%" cellpadding="8" cellspacing="0" border="0">\n${rows}\n</table>`; }
+      case 'spec': { const ss=specStripe().replace('#',''); const fsTh=ptToFontSize(b.thFontSize||12), fcTh=b.thFontColor||tc, fsTd=ptToFontSize(b.tdFontSize||11), fcTd=b.tdFontColor||tc, fsTd2=ptToFontSize(b.td2FontSize||11), fcTd2=b.td2FontColor||tc; const rows=b.rows.filter(r=>r.key||r.value).map((r,i)=>{const bg=i%2===0?` bgcolor="#${ss}"`:'';const v2=r.value2?`<br><font size="${fsTd2}" color="${fcTd2}">${esc(r.value2)}</font>`:'';return `  <tr${bg}>\n    <th width="30%" align="center"><font size="${fsTh}" color="${fcTh}">${esc(r.key)}</font></th>\n    <td><font size="${fsTd}" color="${fcTd}">${esc(r.value)}</font>${v2}</td>\n  </tr>`;}).join('\n'); return `<table width="100%" cellpadding="8" cellspacing="0" border="0">\n${rows}\n</table>`; }
       case 'grid2': {function gsp(d,side){const fsh=ptToFontSize(d.headingFontSize||13),fch=d.headingFontColor||tc,fsb=ptToFontSize(d.bodyFontSize||12),fcb=d.bodyFontColor||tc; const b2=d.body2?`\n    <br><font size="${ptToFontSize(d.body2FontSize||12)}" color="${d.body2FontColor||tc}">${nl2br(d.body2)}</font>`:''; return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr><td>\n    <img src="${esc(d.url)}" alt="${esc(d.alt)}" width="100%" border="0">\n    <br><font size="${fsh}" color="${fch}"><b>${esc(d.heading)}</b></font>\n    <br><font size="${fsb}" color="${fcb}">${nl2br(d.body)}</font>${b2}\n  </td></tr>\n</table>\n<br>`;} return gsp(b.left)+'\n\n'+gsp(b.right);}
       case 'grid2rev': {function gspr(d,side){const fsh=ptToFontSize(d.headingFontSize||13),fch=d.headingFontColor||tc,fsb=ptToFontSize(d.bodyFontSize||12),fcb=d.bodyFontColor||tc; const b2=d.body2?`\n    <br><font size="${ptToFontSize(d.body2FontSize||12)}" color="${d.body2FontColor||tc}">${nl2br(d.body2)}</font>`:''; return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr><td>\n    <font size="${fsh}" color="${fch}"><b>${esc(d.heading)}</b></font>\n    <br><font size="${fsb}" color="${fcb}">${nl2br(d.body)}</font>${b2}\n    <br><img src="${esc(d.url)}" alt="${esc(d.alt)}" width="100%" border="0">\n  </td></tr>\n</table>\n<br>`;} return gspr(b.left)+'\n\n'+gspr(b.right);}
       case 'banner': {const img=`<img src="${esc(b.url)}" alt="${esc(b.alt)}" width="388" border="0">`;return b.link?`<a href="${esc(b.link)}">${img}</a>\n<br>`:`${img}\n<br>`;}
@@ -723,9 +731,9 @@ function exportRakutenSP(){
       case 'grid2img': return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr>\n    <td width="50%"><img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}" width="100%" border="0"></td>\n    <td width="50%"><img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}" width="100%" border="0"></td>\n  </tr>\n</table>\n<br>`;
       case 'spacer': return `<br>`;
       case 'video': return `<br>`;
-      case 'youtube': return `<br>`;
+      case 'youtube': return '';
     }
-  }).join('\n\n');
+  }).filter(s=>s).join('\n\n');
 }
 
 // ===== エクスポート: ヤフー（インラインCSS / PC・SP共通ロジック） =====
@@ -755,32 +763,34 @@ function exportYahoo(mobile){
     if(fc&&fc!==(defColor||txtColor('#000'))) s=s.replace(/color:[^;]+;/,`color:${fc};`);
     return s;
   }
+  // ヤフー用URL（空欄ならMS+楽天URLをフォールバック）
+  function yu(b){return b.urlYahoo||b.url;}
+  function ygu(d){return d.urlYahoo||d.url;}
   return `<div style="${I.wrapper}">\n\n`+blocks.map(b=>{
     switch(b.type){
       case 'title': return `  <div style="${I.headerTop}">\n    <div style="${ovr(I.titleMain,b.nameEnFontSize,b.nameEnFontColor,28)}">${esc(b.nameEn)}</div>\n    <div style="${ovr(I.titleCar,b.carModelFontSize,b.carModelFontColor,14)}">${esc(b.carModel)}</div>\n  </div>\n  <div style="${ovr(I.titleJp,b.nameJpFontSize,b.nameJpFontColor,9,'#666')}">${esc(b.nameJp)}</div>\n  <div style="${ovr(I.catch,b.catchCopyFontSize,b.catchCopyFontColor,13)}">${esc(b.catchCopy)}</div>`;
-      case 'image': {let iw; if(b.sizeClass==='img-custom'){const w=b.customW||800,h=b.customH||300; iw=mobile?`display:block;overflow:hidden;width:100%;margin:0 auto 20px;`:`display:block;position:relative;overflow:hidden;width:${w}px;height:${h}px;margin:0 auto 20px;`;} else if(b.sizeClass==='img-800-320') iw=I.imgWrap800x320; else if(b.sizeClass==='img-800-200') iw=I.imgWrap800x200; else if(b.sizeClass==='img-388-240') iw=I.imgWrap388x240; else iw=I.imgWrap800x400; return `  <div style="${iw}">\n    <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;}
+      case 'image': {let iw; if(b.sizeClass==='img-custom'){const w=b.customW||800,h=b.customH||300; iw=mobile?`display:block;overflow:hidden;width:100%;margin:0 auto 20px;`:`display:block;position:relative;overflow:hidden;width:${w}px;height:${h}px;margin:0 auto 20px;`;} else if(b.sizeClass==='img-800-320') iw=I.imgWrap800x320; else if(b.sizeClass==='img-800-200') iw=I.imgWrap800x200; else if(b.sizeClass==='img-388-240') iw=I.imgWrap388x240; else iw=I.imgWrap800x400; return `  <div style="${iw}">\n    <img src="${esc(yu(b))}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;}
       case 'band': return `  <div style="${ovr(I.band,b.textFontSize,b.textFontColor,15)}">${esc(b.text)}</div>`;
       case 'heading-lg': return `  <div style="${ovr(I.headingLg,b.headingFontSize,b.headingFontColor,17)}">${esc(b.heading)}</div>\n  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">\n    ${nl2br(b.body)}\n  </div>${b.body2?`\n  <div style="${ovr(I.body,b.body2FontSize,b.body2FontColor,12)}">\n    ${nl2br(b.body2)}\n  </div>`:''}`;
       case 'heading-md': return `  <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">\n    ${nl2br(b.body)}\n  </div>${b.body2?`\n  <div style="${ovr(I.body,b.body2FontSize,b.body2FontColor,12)}">\n    ${nl2br(b.body2)}\n  </div>`:''}`;
-
       case 'textonly': { const al=b.textAlign&&b.textAlign!=='left'?`text-align:${b.textAlign};`:''; return `  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}${al}">\n    ${nl2br(b.body)}\n  </div>`; }
-      case 'spec': { const ss=specStripe(); const thOvr=ovr(I.specTh,b.thFontSize,b.thFontColor,12), tdOvr=ovr(I.specTd,b.tdFontSize,b.tdFontColor,11); const rows=b.rows.filter(r=>r.key||r.value).map((r,i)=>{const bg=i%2===0?`background:${ss};`:'';return `    <tr${bg?' style="'+bg+'"':''}>\n      <th style="${thOvr}">${esc(r.key)}</th>\n      <td style="${tdOvr}">${nl2br(r.value)}${r.value2?'<br>\n      '+nl2br(r.value2):''}</td>\n    </tr>`;}).join('\n'); return `  <table style="${I.specTable}">\n    <tbody>\n${rows}\n    </tbody>\n  </table>`; }
-      case 'grid2': {function gyc(d,side){const b2=d.body2?`\n      <div style="${ovr(I.body,d.body2FontSize,d.body2FontColor,12)}">${nl2br(d.body2)}</div>`:''; return `    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(d.url)}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>\n      <div style="${ovr(I.colHeading,d.headingFontSize,d.headingFontColor,13)}">${esc(d.heading)}</div>\n      <div style="${ovr(I.body,d.bodyFontSize,d.bodyFontColor,12)}">${nl2br(d.body)}</div>${b2}\n    </div>`;} return `  <div style="${I.grid2}">\n${gyc(b.left)}\n${gyc(b.right)}\n  </div>`;}
-      case 'grid2rev': {function gycr(d,side){const b2=d.body2?`\n      <div style="${ovr(I.body,d.body2FontSize,d.body2FontColor,12)}">${nl2br(d.body2)}</div>`:''; return `    <div style="${I.col}">\n      <div style="${ovr(I.colHeading,d.headingFontSize,d.headingFontColor,13)}">${esc(d.heading)}</div>\n      <div style="${ovr(I.body,d.bodyFontSize,d.bodyFontColor,12)}">${nl2br(d.body)}</div>${b2}\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(d.url)}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>\n    </div>`;} return `  <div style="${I.grid2}">\n${gycr(b.left)}\n${gycr(b.right)}\n  </div>`;}
-      case 'banner': {const img=`  <div style="${I.imgWrap388x155}">\n    <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;return b.link?`  <a href="${esc(b.link)}" style="${I.bannerLink}" target="_blank">\n${img}\n  </a>`:img;}
-      case 'banner2': {function byh(d){const img=`<div style="${I.imgWrap388x155}">\n        <img src="${esc(d.url)}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>`;return d.link?`<a href="${esc(d.link)}" style="${I.bannerLink}" target="_blank">\n      ${img}\n      </a>`:img;} return `  <div style="${I.grid2.replace('margin:0 auto 30px;','margin:0 auto 24px;')}">\n    <div style="${I.col}">\n      ${byh(b.left)}\n    </div>\n    <div style="${I.col}">\n      ${byh(b.right)}\n    </div>\n  </div>`;}
+      case 'spec': { const ss=specStripe(); const thOvr=ovr(I.specTh,b.thFontSize,b.thFontColor,12), tdOvr=ovr(I.specTd,b.tdFontSize,b.tdFontColor,11), td2Ovr=ovr(I.specTd,b.td2FontSize,b.td2FontColor,11); const rows=b.rows.filter(r=>r.key||r.value).map((r,i)=>{const bg=i%2===0?`background:${ss};`:'';return `    <tr${bg?' style="'+bg+'"':''}>\n      <th style="${thOvr}">${esc(r.key)}</th>\n      <td style="${tdOvr}">${nl2br(r.value)}${r.value2?`<br>\n      <span style="${td2Ovr}">${nl2br(r.value2)}</span>`:''}</td>\n    </tr>`;}).join('\n'); return `  <table style="${I.specTable}">\n    <tbody>\n${rows}\n    </tbody>\n  </table>`; }
+      case 'grid2': {function gyc(d,side){const b2=d.body2?`\n      <div style="${ovr(I.body,d.body2FontSize,d.body2FontColor,12)}">${nl2br(d.body2)}</div>`:''; return `    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(ygu(d))}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>\n      <div style="${ovr(I.colHeading,d.headingFontSize,d.headingFontColor,13)}">${esc(d.heading)}</div>\n      <div style="${ovr(I.body,d.bodyFontSize,d.bodyFontColor,12)}">${nl2br(d.body)}</div>${b2}\n    </div>`;} return `  <div style="${I.grid2}">\n${gyc(b.left)}\n${gyc(b.right)}\n  </div>`;}
+      case 'grid2rev': {function gycr(d,side){const b2=d.body2?`\n      <div style="${ovr(I.body,d.body2FontSize,d.body2FontColor,12)}">${nl2br(d.body2)}</div>`:''; return `    <div style="${I.col}">\n      <div style="${ovr(I.colHeading,d.headingFontSize,d.headingFontColor,13)}">${esc(d.heading)}</div>\n      <div style="${ovr(I.body,d.bodyFontSize,d.bodyFontColor,12)}">${nl2br(d.body)}</div>${b2}\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(ygu(d))}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>\n    </div>`;} return `  <div style="${I.grid2}">\n${gycr(b.left)}\n${gycr(b.right)}\n  </div>`;}
+      case 'banner': {const img=`  <div style="${I.imgWrap388x155}">\n    <img src="${esc(yu(b))}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;return b.link?`  <a href="${esc(b.link)}" style="${I.bannerLink}" target="_blank">\n${img}\n  </a>`:img;}
+      case 'banner2': {function byh(d){const img=`<div style="${I.imgWrap388x155}">\n        <img src="${esc(ygu(d))}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>`;return d.link?`<a href="${esc(d.link)}" style="${I.bannerLink}" target="_blank">\n      ${img}\n      </a>`:img;} return `  <div style="${I.grid2.replace('margin:0 auto 30px;','margin:0 auto 24px;')}">\n    <div style="${I.col}">\n      ${byh(b.left)}\n    </div>\n    <div style="${I.col}">\n      ${byh(b.right)}\n    </div>\n  </div>`;}
       case 'img-left': case 'img-right': {
-        const imgCol=`<div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.url)}" alt="${esc(b.alt)}" style="${I.imgInner}">\n      </div>\n    </div>`;
+        const imgCol=`<div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(yu(b))}" alt="${esc(b.alt)}" style="${I.imgInner}">\n      </div>\n    </div>`;
         const lnk=b.linkText&&b.linkUrl?`\n      <div style="${I.body}text-align:${b.linkAlign||'left'};"><a href="${esc(b.linkUrl)}" target="_blank">${esc(b.linkText)}</a></div>`:'';
         const txtColStyle=mobile?I.col:I.col+'height:240px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;';
         const txtCol=`<div style="${txtColStyle}">\n      <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n      <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">${nl2br(b.body)}</div>${lnk}\n    </div>`;
         return mobile?`  ${imgCol}\n  ${txtCol}`:`  <div style="${I.grid2}">\n    ${b.type==='img-left'?imgCol+'\n    '+txtCol:txtCol+'\n    '+imgCol}\n  </div>`;}
-      case 'grid2img': return `  <div style="${I.grid2}">\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n  </div>`;
+      case 'grid2img': return `  <div style="${I.grid2}">\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(ygu(b.left))}" alt="${esc(b.left.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(ygu(b.right))}" alt="${esc(b.right.alt)}" style="${I.imgInner}">\n      </div>\n    </div>\n  </div>`;
       case 'spacer': return `  <div style="height:${b.height||20}px;"></div>`;
-      case 'video': { const w=mobile?'100%':b.width||800; const mw=mobile?'100%':`${w}px`; return `  <div style="max-width:${mw};margin:0 auto 20px;">\n    <video width="100%" controls>\n      <source src="${esc(b.url)}" type="video/mp4">\n    </video>\n  </div>`; }
-      case 'youtube': { const w=mobile?'100%':b.width||800; const mw=mobile?'100%':`${w}px`; const h=b.height||451; return `  <div style="max-width:${mw};margin:0 auto 20px;">\n    <iframe width="100%" height="${h}" src="https://www.youtube.com/embed/${esc(b.videoId)}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>\n  </div>`; }
+      case 'video': { const w=mobile?'100%':b.width||800; const mw=mobile?'100%':`${w}px`; return `  <div style="max-width:${mw};margin:0 auto 20px;">\n    <video width="100%" controls>\n      <source src="${esc(yu(b))}" type="video/mp4">\n    </video>\n  </div>`; }
+      case 'youtube': return '';
     }
-  }).join('\n\n')+'\n\n</div>';
+  }).filter(s=>s).join('\n\n')+'\n\n</div>';
 }
 function exportYahooPC(){ return exportYahoo(false); }
 function exportYahooSP(){ return exportYahoo(true); }
@@ -824,8 +834,13 @@ function updateStats(code){
     stats.push(`<span class="stat">バイト: ${byteLen.toLocaleString()}</span>`);
     if(currentExportTab==='rk-sp'){const icls=imgCount>20?'error':imgCount>15?'warn':'';stats.push(`<span class="stat ${icls}">画像: ${imgCount}/20枚</span>`);}
   } else if(currentPlatform==='yahoo'){
-    const cls=byteLen>30000?'error':byteLen>25000?'warn':'';
-    stats.push(`<span class="stat ${cls}">バイト: ${byteLen.toLocaleString()}/30,000</span>`);
+    if(currentExportTab==='yh-sp'){
+      const cls=byteLen>10000?'error':byteLen>8000?'warn':'';
+      stats.push(`<span class="stat ${cls}">バイト: ${byteLen.toLocaleString()}/10,000</span>`);
+    } else {
+      const cls=byteLen>30000?'error':byteLen>25000?'warn':'';
+      stats.push(`<span class="stat ${cls}">バイト: ${byteLen.toLocaleString()}/30,000</span>`);
+    }
     stats.push(`<span class="stat">文字数: ${charLen.toLocaleString()}</span>`);
   } else {
     stats.push(`<span class="stat">文字数: ${charLen.toLocaleString()}</span>`);
