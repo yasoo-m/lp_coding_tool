@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>テキスト化LP作成ツール</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif; background:#f0f2f5; color:#333; font-size:14px; }
@@ -122,7 +123,7 @@ body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meir
     <button class="btn btn-success btn-sm" onclick="saveProject()">保存</button>
     <button class="btn btn-outline btn-sm" onclick="showLoadModal()">読込</button>
     <button class="btn" style="background:#888;color:#fff;" onclick="document.getElementById('importFile').click()">インポート</button>
-    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(this)">
+    <input type="file" id="importFile" accept=".json,.zip" style="display:none" onchange="importProject(this)">
     <button class="btn btn-warning" onclick="showExportModal()">エクスポート</button>
     <button class="btn btn-danger btn-sm" onclick="clearAll()">全クリア</button>
   </div>
@@ -861,52 +862,81 @@ function downloadExport(){const c=document.getElementById('exportCode').value;co
 
 // ===== 一括エクスポート/インポート =====
 function downloadAllExport(){
-  const data={
+  const zip=new JSZip();
+  const dt=new Date().toISOString().slice(0,10);
+
+  // 各プラットフォームのHTMLをテキストファイルとして格納
+  const ms=zip.folder('makeshop');
+  ms.file('makeshop_商品説明用.html', exportMakeshopDesc());
+  ms.file('makeshop_完全HTML.html', exportMakeshopFull());
+
+  const rk=zip.folder('rakuten');
+  rk.file('rakuten_PC版.html', exportRakutenPC());
+  rk.file('rakuten_スマホ版.html', exportRakutenSP());
+
+  const yh=zip.folder('yahoo');
+  yh.file('yahoo_PC用フリースペース.html', exportYahooPC());
+  yh.file('yahoo_スマホ用フリースペース.html', exportYahooSP());
+
+  // プロジェクトデータ（インポート用）
+  const projectData={
     version:1,
-    exportDate:new Date().toISOString().slice(0,10),
+    exportDate:dt,
     platform:currentPlatform,
     bgColor:bgColor,
     blocks:JSON.parse(JSON.stringify(blocks)),
-    blockIdCounter:blockIdCounter,
-    html:{
-      'ms-desc':exportMakeshopDesc(),
-      'ms-full':exportMakeshopFull(),
-      'rk-pc':exportRakutenPC(),
-      'rk-sp':exportRakutenSP(),
-      'yh-pc':exportYahooPC(),
-      'yh-sp':exportYahooSP()
-    }
+    blockIdCounter:blockIdCounter
   };
-  const json=JSON.stringify(data,null,2);
-  const blob=new Blob([json],{type:'application/json;charset=utf-8'});
-  const u=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=u;
-  a.download=`lp-export-${data.exportDate}.json`;
-  a.click();
-  URL.revokeObjectURL(u);
-  alert('一括エクスポートしました');
+  zip.file('project-data.json', JSON.stringify(projectData,null,2));
+
+  // ZIP生成＆ダウンロード
+  zip.generateAsync({type:'blob'}).then(function(blob){
+    const u=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=u;
+    a.download=`lp-export-${dt}.zip`;
+    a.click();
+    URL.revokeObjectURL(u);
+    alert('一括エクスポート（ZIP）しました');
+  });
+}
+function restoreProject(data){
+  if(!data.blocks||!Array.isArray(data.blocks)){alert('無効なファイルです');return;}
+  blocks=data.blocks;
+  blockIdCounter=data.blockIdCounter||0;
+  currentPlatform=data.platform||'makeshop';
+  bgColor=data.bgColor||'#ffffff';
+  document.getElementById('platformSelect').value=currentPlatform;
+  document.getElementById('bgColorSelect').value=bgColor;
+  changePlatform();changeBgColor();
+  renderEditor();renderPreview();
+  alert('インポートしました（ブロック数: '+blocks.length+'）');
 }
 function importProject(input){
   const file=input.files[0];
   if(!file) return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      const data=JSON.parse(e.target.result);
-      if(!data.blocks||!Array.isArray(data.blocks)){alert('無効なファイルです');return;}
-      blocks=data.blocks;
-      blockIdCounter=data.blockIdCounter||0;
-      currentPlatform=data.platform||'makeshop';
-      bgColor=data.bgColor||'#ffffff';
-      document.getElementById('platformSelect').value=currentPlatform;
-      document.getElementById('bgColorSelect').value=bgColor;
-      changePlatform();changeBgColor();
-      renderEditor();renderPreview();
-      alert('インポートしました（ブロック数: '+blocks.length+'）');
-    }catch(err){alert('ファイルの読み込みに失敗しました: '+err.message);}
-  };
-  reader.readAsText(file);
+  const name=file.name.toLowerCase();
+
+  if(name.endsWith('.zip')){
+    // ZIPファイル: project-data.jsonを読み取り
+    file.arrayBuffer().then(function(buf){
+      return JSZip.loadAsync(buf);
+    }).then(function(zip){
+      const pf=zip.file('project-data.json');
+      if(!pf){alert('ZIPにproject-data.jsonが見つかりません');return;}
+      return pf.async('string');
+    }).then(function(text){
+      restoreProject(JSON.parse(text));
+    }).catch(function(err){alert('ZIPの読み込みに失敗しました: '+err.message);});
+  } else {
+    // JSONファイル: 直接読み取り
+    const reader=new FileReader();
+    reader.onload=function(e){
+      try{ restoreProject(JSON.parse(e.target.result)); }
+      catch(err){alert('ファイルの読み込みに失敗しました: '+err.message);}
+    };
+    reader.readAsText(file);
+  }
   input.value='';
 }
 
