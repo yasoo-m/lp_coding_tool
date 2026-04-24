@@ -392,7 +392,7 @@ function applyPreviewBg(){
 function addBlock(type){
   const id=++blockIdCounter, data={id,type};
   const def=BLOCK_DEFS[type];
-  if(type==='spec'){ data.rows=[{key:'',value:'',value2:''},{key:'',value:'',value2:''},{key:'',value:'',value2:''}]; data.thFontSize=12; data.thFontColor='#000000'; data.tdFontSize=11; data.tdFontColor='#000000'; data.td2FontSize=11; data.td2FontColor='#000000'; }
+  if(type==='spec'){ data.rows=[{key:'',values:['','','']},{key:'',values:['','','']},{key:'',values:['','','']}]; data.thFontSize=12; data.thFontColor='#000000'; data.valueFonts=[{size:11,color:'#000000'},{size:11,color:'#000000'},{size:11,color:'#000000'}]; }
   else if(type==='grid2'||type==='grid2rev') { data.left={url:'',urlYahoo:'',alt:'',heading:'',body:'',body2:'',headingFontSize:14,headingFontColor:'#000000',bodyFontSize:13,bodyFontColor:'#000000',body2FontSize:13,body2FontColor:'#000000'}; data.right={...data.left}; }
   else if(type==='banner2') { data.left={url:'',urlYahoo:'',alt:'',link:'',linkRakuten:'',linkYahoo:''}; data.right={url:'',urlYahoo:'',alt:'',link:'',linkRakuten:'',linkYahoo:''}; }
   else if(type==='img-left'||type==='img-right') { data.url=''; data.urlYahoo=''; data.alt=''; data.heading=''; data.body=''; data.linkText=''; data.linkUrl=''; data.linkUrlRakuten=''; data.linkUrlYahoo=''; data.linkAlign='left'; data.headingFontSize=17; data.headingFontColor='#000000'; data.bodyFontSize=14; data.bodyFontColor='#000000'; }
@@ -479,12 +479,64 @@ function renderBlockForm(b){
 }
 
 function renderSpecForm(b){
-  return `<div>${b.rows.map((r,i)=>`<div class="spec-row"><input type="text" value="${esc(r.key)}" placeholder="項目名" oninput="updateSpecRow(${b.id},${i},'key',this.value)"><textarea style="min-height:28px;height:28px;" placeholder="値①" oninput="updateSpecRow(${b.id},${i},'value',this.value)">${esc(r.value)}</textarea><textarea style="min-height:28px;height:28px;" placeholder="値②（空欄で非表示）" oninput="updateSpecRow(${b.id},${i},'value2',this.value)">${esc(r.value2||'')}</textarea><button class="remove-row-btn" onclick="removeSpecRow(${b.id},${i})">&times;</button></div>`).join('')}</div><button class="btn btn-primary" style="font-size:10px;padding:3px 10px;margin-top:4px;" onclick="addSpecRow(${b.id})">+ 行追加</button>
+  normalizeSpec(b);
+  const numMark=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮'];
+  const mk=vi=>numMark[vi]||('('+(vi+1)+')');
+  const rowsHtml=b.rows.map((r,i)=>{
+    const vals=r.values.map((v,vi)=>{
+      const ph=vi===0?'値①':`値${mk(vi)}（空欄で非表示）`;
+      return `<textarea style="min-height:28px;height:28px;" placeholder="${ph}" oninput="updateSpecValue(${b.id},${i},${vi},this.value)">${esc(v||'')}</textarea>`;
+    }).join('');
+    return `<div class="spec-row"><input type="text" value="${esc(r.key)}" placeholder="項目名" oninput="updateSpecRow(${b.id},${i},'key',this.value)">${vals}<button class="remove-row-btn" onclick="removeSpecRow(${b.id},${i})">&times;</button></div>`;
+  }).join('');
+  const fontsHtml=b.valueFonts.map((vf,vi)=>{
+    const lbl=`値${mk(vi)}(TD${vi===0?'':vi+1})`;
+    const rmBtn=b.valueFonts.length>1?`<button class="remove-row-btn" style="margin-left:4px;flex-shrink:0;" onclick="removeSpecValue(${b.id},${vi})" title="この値列を削除">&times;</button>`:'';
+    return `<div class="form-group" style="margin-bottom:4px;display:flex;align-items:center;gap:6px;"><label style="flex-shrink:0;">${lbl}</label>${fontOptsForValue(b.id,vi,vf.size||11,vf.color||'#000000')}${rmBtn}</div>`;
+  }).join('');
+  return `<div>${rowsHtml}</div>
+  <div style="display:flex;gap:6px;margin-top:4px;">
+    <button class="btn btn-primary" style="font-size:10px;padding:3px 10px;" onclick="addSpecRow(${b.id})">+ 行追加</button>
+    <button class="btn btn-primary" style="font-size:10px;padding:3px 10px;" onclick="addSpecValue(${b.id})">+ 値追加</button>
+  </div>
   <div style="margin-top:8px;padding:8px;background:#f8f9fa;border-radius:6px;">
     <div class="form-group" style="margin-bottom:4px;"><label>項目名(TH)</label>${fontOptsHTML(b.id,'th',b.thFontSize||12,b.thFontColor||'#000000')}</div>
-    <div class="form-group" style="margin-bottom:4px;"><label>値①(TD)</label>${fontOptsHTML(b.id,'td',b.tdFontSize||11,b.tdFontColor||'#000000')}</div>
-    <div class="form-group" style="margin-bottom:0;"><label>値②(TD2)</label>${fontOptsHTML(b.id,'td2',b.td2FontSize||11,b.td2FontColor||'#000000')}</div>
+    ${fontsHtml}
   </div>`;
+}
+function fontOptsForValue(blockId, vi, sizeVal, colorVal){
+  return `<div class="font-opts">
+    <label>サイズ</label><select onchange="updateSpecValueFont(${blockId},${vi},'size',parseInt(this.value))">${fontSizeOptions(sizeVal)}</select>
+    <label>色</label><input type="color" value="${colorVal||'#000000'}" onchange="updateSpecValueFont(${blockId},${vi},'color',this.value)">
+  </div>`;
+}
+function normalizeSpec(b){
+  if(!b||b.type!=='spec') return;
+  if(!Array.isArray(b.rows)) b.rows=[];
+  b.rows.forEach(r=>{
+    if(!Array.isArray(r.values)){
+      const arr=[];
+      if(r.value!==undefined) arr.push(r.value||'');
+      if(r.value2!==undefined) arr.push(r.value2||'');
+      if(r.value3!==undefined) arr.push(r.value3||'');
+      r.values=arr.length?arr:[''];
+      delete r.value; delete r.value2; delete r.value3;
+    }
+    if(r.key===undefined) r.key='';
+  });
+  const maxLen=Math.max(1,...b.rows.map(r=>r.values.length));
+  b.rows.forEach(r=>{ while(r.values.length<maxLen) r.values.push(''); });
+  if(!Array.isArray(b.valueFonts)){
+    const oldS=[b.tdFontSize,b.td2FontSize,b.td3FontSize];
+    const oldC=[b.tdFontColor,b.td2FontColor,b.td3FontColor];
+    b.valueFonts=[];
+    for(let i=0;i<maxLen;i++) b.valueFonts.push({size:oldS[i]||11,color:oldC[i]||'#000000'});
+    delete b.tdFontSize; delete b.tdFontColor;
+    delete b.td2FontSize; delete b.td2FontColor;
+    delete b.td3FontSize; delete b.td3FontColor;
+  }
+  while(b.valueFonts.length<maxLen) b.valueFonts.push({size:11,color:'#000000'});
+  while(b.valueFonts.length>maxLen) b.valueFonts.pop();
 }
 function renderGrid2Form(b){
   function cf(side,lbl){const d=b[side];return `<div class="col-input-group"><h4>${lbl}</h4>
@@ -564,8 +616,12 @@ function renderYoutubeForm(b){
 // ===== データ更新 =====
 function updateField(id,k,v){const b=blocks.find(x=>x.id===id);if(b){b[k]=v;renderPreview();}}
 function updateSpecRow(id,ri,f,v){const b=blocks.find(x=>x.id===id);if(b){b.rows[ri][f]=v;renderPreview();}}
-function addSpecRow(id){const b=blocks.find(x=>x.id===id);if(b){b.rows.push({key:'',value:'',value2:''});renderEditor();renderPreview();reopenBlock(id);}}
+function addSpecRow(id){const b=blocks.find(x=>x.id===id);if(b){normalizeSpec(b);const n=b.valueFonts.length;b.rows.push({key:'',values:Array(n).fill('')});renderEditor();renderPreview();reopenBlock(id);}}
 function removeSpecRow(id,ri){const b=blocks.find(x=>x.id===id);if(b&&b.rows.length>1){b.rows.splice(ri,1);renderEditor();renderPreview();reopenBlock(id);}}
+function updateSpecValue(id,ri,vi,v){const b=blocks.find(x=>x.id===id);if(b&&b.rows[ri]&&Array.isArray(b.rows[ri].values)){b.rows[ri].values[vi]=v;renderPreview();}}
+function addSpecValue(id){const b=blocks.find(x=>x.id===id);if(b){normalizeSpec(b);b.valueFonts.push({size:11,color:'#000000'});b.rows.forEach(r=>r.values.push(''));renderEditor();renderPreview();reopenBlock(id);}}
+function removeSpecValue(id,vi){const b=blocks.find(x=>x.id===id);if(b){normalizeSpec(b);if(b.valueFonts.length>1){b.valueFonts.splice(vi,1);b.rows.forEach(r=>r.values.splice(vi,1));renderEditor();renderPreview();reopenBlock(id);}}}
+function updateSpecValueFont(id,vi,field,v){const b=blocks.find(x=>x.id===id);if(b&&b.valueFonts&&b.valueFonts[vi]){b.valueFonts[vi][field]=v;renderPreview();}}
 function updateGridField(id,s,f,v){const b=blocks.find(x=>x.id===id);if(b){b[s][f]=v;renderPreview();}}
 
 // ===== ブロック操作 =====
@@ -627,7 +683,7 @@ function previewHTML(b){
     case 'heading-md': return `<div class="text-heading-md"${pStyle(b,'heading',16)}>${ph(b.heading,'小見出し')}</div><div class="text-body"${pStyle(b,'body',12)}>${nl2br(b.body)||'本文'}</div>${b.body2?`<div class="text-body"${pStyle(b,'body2',12)}>${nl2br(b.body2)}</div>`:''}`;
 
     case 'textonly': { const ps=pStyle(b,'body',12); const al=b.textAlign&&b.textAlign!=='left'?`text-align:${b.textAlign};`:''; return al?`<div class="text-body" style="${ps.match(/style="([^"]*)"/)[1]}${al}">${nl2br(b.body)||'本文テキスト'}</div>`:`<div class="text-body"${ps}>${nl2br(b.body)||'本文テキスト'}</div>`; }
-    case 'spec': { const thS=specStyle(b,'th',12), tdS=specStyle(b,'td',11), td2S=specStyle(b,'td2',11); const sr=b.rows.filter(r=>r.key||r.value).map(r=>`<tr><th${thS}>${esc(r.key)}</th><td${tdS}>${nl2br(r.value)}${r.value2?`<br><span${td2S}>${nl2br(r.value2)}</span>`:''}</td></tr>`).join('\n'); return `<table class="lp-spec-table"><tbody>${sr||`<tr><th${thS}>項目</th><td${tdS}>値</td></tr>`}</tbody></table>`; }
+    case 'spec': { normalizeSpec(b); const thS=specStyle(b,'th',12); const vStyle=vf=>{const fs=vf.size,fc=vf.color;const ec=(fc&&fc!=='#000000')?fc:txtColor('#000');let s=`color:${ec};`;if(fs&&fs!==11) s+=`font-size:${fs}pt;`;return ` style="${s}"`;}; const sr=b.rows.filter(r=>r.key||(r.values&&r.values.some(v=>v))).map(r=>{const mainS=vStyle(b.valueFonts[0]);const rest=r.values.slice(1).map((v,vi)=>v?`<br><span${vStyle(b.valueFonts[vi+1])}>${nl2br(v)}</span>`:'').join('');return `<tr><th${thS}>${esc(r.key)}</th><td${mainS}>${nl2br(r.values[0]||'')}${rest}</td></tr>`;}).join('\n'); return `<table class="lp-spec-table"><tbody>${sr||`<tr><th${thS}>項目</th><td>値</td></tr>`}</tbody></table>`; }
     case 'grid2': function ci(d,l){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:'<div class="img-placeholder">画像</div>'; const b2=d.body2?`<div class="text-body"${gStyle(d,'body2',12)}>${nl2br(d.body2)}</div>`:''; return `<div class="lp-col"><div class="lp-img-wrap img-388-240">${img}</div><div class="text-heading-md"${gStyle(d,'heading',13)}>${ph(d.heading,l)}</div><div class="text-body"${gStyle(d,'body',12)}>${nl2br(d.body)||'本文'}</div>${b2}</div>`;} return `<div class="lp-grid-2">${ci(b.left,'左')}${ci(b.right,'右')}</div>`;
     case 'grid2rev': function cr(d,l){const img=d.url?`<img src="${esc(d.url)}" alt="${esc(d.alt)}">`:'<div class="img-placeholder">画像</div>'; const b2=d.body2?`<div class="text-body"${gStyle(d,'body2',12)}>${nl2br(d.body2)}</div>`:''; return `<div class="lp-col"><div class="text-heading-md"${gStyle(d,'heading',13)}>${ph(d.heading,l)}</div><div class="text-body"${gStyle(d,'body',12)}>${nl2br(d.body)||'本文'}</div>${b2}<div class="lp-img-wrap img-388-240">${img}</div></div>`;} return `<div class="lp-grid-2">${cr(b.left,'左')}${cr(b.right,'右')}</div>`;
     case 'banner': {const bs=b.bannerSize||'388x155';const sizeMap={'388x155':{cls:'img-388-155',w:388,h:155},'800x372':{cls:'img-800-372',w:800,h:372},'800x528':{cls:'img-800-528',w:800,h:528}};const si=sizeMap[bs]||sizeMap['388x155'];const img=b.url?`<img src="${esc(b.url)}" alt="${esc(b.alt)}">`:`<div class="img-placeholder">バナー (${si.w}×${si.h})</div>`;const inner=`<div class="lp-img-wrap ${si.cls}">${img}</div>`;return b.link?`<a class="lp-banner-link" href="${esc(b.link)}" target="_blank">${inner}</a>`:inner;}
@@ -675,7 +731,7 @@ function exportBodyCSS(skipYoutube,platform){
       case 'heading-md': return `<div class="text-heading-md"${expStyle(b,'heading',16,'#000000')}>${esc(b.heading)}</div>\n<div class="text-body"${expStyle(b,'body',12,'#000000')}>\n  ${nl2br(b.body)}\n</div>${b.body2?`\n<div class="text-body"${expStyle(b,'body2',12,'#000000')}>\n  ${nl2br(b.body2)}\n</div>`:''}`;
 
       case 'textonly': { const al=b.textAlign&&b.textAlign!=='left'?` style="text-align:${b.textAlign};"`:expStyle(b,'body',12,'#000000'); const s=b.textAlign&&b.textAlign!=='left'?(() => {const e=expStyle(b,'body',12,'#000000'); return e?e.replace('style="',`style="text-align:${b.textAlign};`):` style="text-align:${b.textAlign};"`})():expStyle(b,'body',12,'#000000'); return `<div class="text-body"${s}>\n  ${nl2br(b.body)}\n</div>`; }
-      case 'spec': { const thS=expStyle(b,'th',12,'#000000'), tdS=expStyle(b,'td',11,'#000000'), td2S=expStyle(b,'td2',11,'#000000'); const rows=b.rows.filter(r=>r.key||r.value).map(r=>`    <tr>\n      <th${thS}>${esc(r.key)}</th>\n      <td${tdS}>${nl2br(r.value)}${r.value2?`<br>\n      <span${td2S}>${nl2br(r.value2)}</span>`:''}</td>\n    </tr>`).join('\n'); return `<table class="lp-spec-table">\n  <tbody>\n${rows}\n  </tbody>\n</table>`; }
+      case 'spec': { normalizeSpec(b); const thS=expStyle(b,'th',12,'#000000'); const exVS=vf=>{let s='';if(vf.size&&vf.size!==11) s+=`font-size:${vf.size}pt;`;if(vf.color&&vf.color!=='#000000'&&vf.color!==txtColor('#000')) s+=`color:${vf.color};`;return s?` style="${s}"`:'';}; const rows=b.rows.filter(r=>r.key||(r.values&&r.values.some(v=>v))).map(r=>{const tdS=exVS(b.valueFonts[0]);const rest=r.values.slice(1).map((v,vi)=>v?`<br>\n      <span${exVS(b.valueFonts[vi+1])}>${nl2br(v)}</span>`:'').join('');return `    <tr>\n      <th${thS}>${esc(r.key)}</th>\n      <td${tdS}>${nl2br(r.values[0]||'')}${rest}</td>\n    </tr>`;}).join('\n'); return `<table class="lp-spec-table">\n  <tbody>\n${rows}\n  </tbody>\n</table>`; }
       case 'grid2': { const lb2=b.left.body2?`\n    <div class="text-body"${expGridStyle(b.left,'body2',12)}>${nl2br(b.left.body2)}</div>`:''; const rb2=b.right.body2?`\n    <div class="text-body"${expGridStyle(b.right,'body2',12)}>${nl2br(b.right.body2)}</div>`:''; return `<div class="lp-grid-2">\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}">\n    </div>\n    <div class="text-heading-md"${expGridStyle(b.left,'heading',13)}>${esc(b.left.heading)}</div>\n    <div class="text-body"${expGridStyle(b.left,'body',12)}>${nl2br(b.left.body)}</div>${lb2}\n  </div>\n  <div class="lp-col">\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}">\n    </div>\n    <div class="text-heading-md"${expGridStyle(b.right,'heading',13)}>${esc(b.right.heading)}</div>\n    <div class="text-body"${expGridStyle(b.right,'body',12)}>${nl2br(b.right.body)}</div>${rb2}\n  </div>\n</div>`; }
       case 'grid2rev': { const lb2=b.left.body2?`\n    <div class="text-body"${expGridStyle(b.left,'body2',12)}>${nl2br(b.left.body2)}</div>`:''; const rb2=b.right.body2?`\n    <div class="text-body"${expGridStyle(b.right,'body2',12)}>${nl2br(b.right.body2)}</div>`:''; return `<div class="lp-grid-2">\n  <div class="lp-col">\n    <div class="text-heading-md"${expGridStyle(b.left,'heading',13)}>${esc(b.left.heading)}</div>\n    <div class="text-body"${expGridStyle(b.left,'body',12)}>${nl2br(b.left.body)}</div>${lb2}\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.left.url)}" alt="${esc(b.left.alt)}">\n    </div>\n  </div>\n  <div class="lp-col">\n    <div class="text-heading-md"${expGridStyle(b.right,'heading',13)}>${esc(b.right.heading)}</div>\n    <div class="text-body"${expGridStyle(b.right,'body',12)}>${nl2br(b.right.body)}</div>${rb2}\n    <div class="lp-img-wrap img-388-240">\n      <img src="${esc(b.right.url)}" alt="${esc(b.right.alt)}">\n    </div>\n  </div>\n</div>`; }
       case 'banner': {const lk=rl(b);const bs=b.bannerSize||'388x155';const bCls={'388x155':'img-388-155','800x372':'img-800-372','800x528':'img-800-528'}[bs]||'img-388-155';const img=`<div class="lp-img-wrap ${bCls}">\n  <img src="${esc(b.url)}" alt="${esc(b.alt)}">\n</div>`;return lk?`<a class="lp-banner-link" href="${esc(lk)}" target="_blank">\n${img}\n</a>`:img;}
@@ -745,7 +801,7 @@ function exportRakutenSP(){
       case 'heading-lg': {const fch=b.headingFontColor||tc, fsh=ptToFontSize(b.headingFontSize||17), fcb=b.bodyFontColor||tc, fsb=ptToFontSize(b.bodyFontSize||12); const b2sp=b.body2?`\n<font size="${ptToFontSize(b.body2FontSize||12)}" color="${b.body2FontColor||tc}">${nl2br(b.body2)}</font>`:''; return `<font size="${fsh}" color="${fch}"><b>${esc(b.heading)}</b></font>\n<br>\n<font size="${fsb}" color="${fcb}">${nl2br(b.body)}</font>${b2sp}\n<br><br>`;}
       case 'heading-md': {const fch=b.headingFontColor||tc, fsh=ptToFontSize(b.headingFontSize||16), fcb=b.bodyFontColor||tc, fsb=ptToFontSize(b.bodyFontSize||12); const b2sp=b.body2?`\n<font size="${ptToFontSize(b.body2FontSize||12)}" color="${b.body2FontColor||tc}">${nl2br(b.body2)}</font>`:''; return `<font size="${fsh}" color="${fch}"><b>${esc(b.heading)}</b></font>\n<br>\n<font size="${fsb}" color="${fcb}">${nl2br(b.body)}</font>${b2sp}\n<br><br>`;}
       case 'textonly': {const fc=b.bodyFontColor||tc, fs=ptToFontSize(b.bodyFontSize||12), al=b.textAlign||'left'; return al==='left'?`<font size="${fs}" color="${fc}">${nl2br(b.body)}</font>\n<br><br>`:`<p align="${al}"><font size="${fs}" color="${fc}">${nl2br(b.body)}</font></p>\n<br>`;}
-      case 'spec': { const ss=specStripe().replace('#',''); const fsTh=ptToFontSize(b.thFontSize||12), fcTh=b.thFontColor||tc, fsTd=ptToFontSize(b.tdFontSize||11), fcTd=b.tdFontColor||tc, fsTd2=ptToFontSize(b.td2FontSize||11), fcTd2=b.td2FontColor||tc; const rows=b.rows.filter(r=>r.key||r.value).map((r,i)=>{const bg=i%2===0?` bgcolor="#${ss}"`:'';const v2=r.value2?`<br><font size="${fsTd2}" color="${fcTd2}">${esc(r.value2)}</font>`:'';return `  <tr${bg}>\n    <th width="30%" align="center"><font size="${fsTh}" color="${fcTh}">${esc(r.key)}</font></th>\n    <td><font size="${fsTd}" color="${fcTd}">${esc(r.value)}</font>${v2}</td>\n  </tr>`;}).join('\n'); return `<table width="100%" cellpadding="8" cellspacing="0" border="0">\n${rows}\n</table>`; }
+      case 'spec': { normalizeSpec(b); const ss=specStripe().replace('#',''); const fsTh=ptToFontSize(b.thFontSize||12), fcTh=b.thFontColor||tc; const rows=b.rows.filter(r=>r.key||(r.values&&r.values.some(v=>v))).map((r,i)=>{const bg=i%2===0?` bgcolor="#${ss}"`:'';const vf0=b.valueFonts[0];const fs0=ptToFontSize(vf0.size||11), fc0=vf0.color||tc;const mainVal=`<font size="${fs0}" color="${fc0}">${esc(r.values[0]||'')}</font>`;const rest=r.values.slice(1).map((v,vi)=>{if(!v) return '';const vf=b.valueFonts[vi+1];const fs=ptToFontSize(vf.size||11), fc=vf.color||tc;return `<br><font size="${fs}" color="${fc}">${esc(v)}</font>`;}).join('');return `  <tr${bg}>\n    <th width="30%" align="center"><font size="${fsTh}" color="${fcTh}">${esc(r.key)}</font></th>\n    <td>${mainVal}${rest}</td>\n  </tr>`;}).join('\n'); return `<table width="100%" cellpadding="8" cellspacing="0" border="0">\n${rows}\n</table>`; }
       case 'grid2': {function gsp(d,side){const fsh=ptToFontSize(d.headingFontSize||13),fch=d.headingFontColor||tc,fsb=ptToFontSize(d.bodyFontSize||12),fcb=d.bodyFontColor||tc; const b2=d.body2?`\n    <br><font size="${ptToFontSize(d.body2FontSize||12)}" color="${d.body2FontColor||tc}">${nl2br(d.body2)}</font>`:''; return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr><td>\n    <img src="${esc(d.url)}" alt="${esc(d.alt)}" width="100%" border="0">\n    <br><font size="${fsh}" color="${fch}"><b>${esc(d.heading)}</b></font>\n    <br><font size="${fsb}" color="${fcb}">${nl2br(d.body)}</font>${b2}\n  </td></tr>\n</table>\n<br>`;} return gsp(b.left)+'\n\n'+gsp(b.right);}
       case 'grid2rev': {function gspr(d,side){const fsh=ptToFontSize(d.headingFontSize||13),fch=d.headingFontColor||tc,fsb=ptToFontSize(d.bodyFontSize||12),fcb=d.bodyFontColor||tc; const b2=d.body2?`\n    <br><font size="${ptToFontSize(d.body2FontSize||12)}" color="${d.body2FontColor||tc}">${nl2br(d.body2)}</font>`:''; return `<table width="100%" cellpadding="0" cellspacing="0" border="0">\n  <tr><td>\n    <font size="${fsh}" color="${fch}"><b>${esc(d.heading)}</b></font>\n    <br><font size="${fsb}" color="${fcb}">${nl2br(d.body)}</font>${b2}\n    <br><img src="${esc(d.url)}" alt="${esc(d.alt)}" width="100%" border="0">\n  </td></tr>\n</table>\n<br>`;} return gspr(b.left)+'\n\n'+gspr(b.right);}
       case 'banner': {const lk=b.linkRakuten||b.link;const bw={'388x155':388,'800x372':800,'800x528':800}[b.bannerSize||'388x155']||388;const img=`<img src="${esc(b.url)}" alt="${esc(b.alt)}" width="${bw}" border="0">`;return lk?`<a href="${esc(lk)}">${img}</a>\n<br>`:`${img}\n<br>`;}
@@ -806,7 +862,7 @@ function exportYahoo(mobile){
       case 'heading-lg': return `  <div style="${ovr(I.headingLg,b.headingFontSize,b.headingFontColor,17)}">${esc(b.heading)}</div>\n  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">\n    ${nl2br(b.body)}\n  </div>${b.body2?`\n  <div style="${ovr(I.body,b.body2FontSize,b.body2FontColor,12)}">\n    ${nl2br(b.body2)}\n  </div>`:''}`;
       case 'heading-md': return `  <div style="${ovr(I.headingMd,b.headingFontSize,b.headingFontColor,16)}">${esc(b.heading)}</div>\n  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}">\n    ${nl2br(b.body)}\n  </div>${b.body2?`\n  <div style="${ovr(I.body,b.body2FontSize,b.body2FontColor,12)}">\n    ${nl2br(b.body2)}\n  </div>`:''}`;
       case 'textonly': { const al=b.textAlign&&b.textAlign!=='left'?`text-align:${b.textAlign};`:''; return `  <div style="${ovr(I.body,b.bodyFontSize,b.bodyFontColor,12)}${al}">\n    ${nl2br(b.body)}\n  </div>`; }
-      case 'spec': { const ss=specStripe(); const thOvr=ovr(I.specTh,b.thFontSize,b.thFontColor,12), tdOvr=ovr(I.specTd,b.tdFontSize,b.tdFontColor,11), td2Ovr=ovr(I.specTd,b.td2FontSize,b.td2FontColor,11); const rows=b.rows.filter(r=>r.key||r.value).map((r,i)=>{const bg=i%2===0?`background:${ss};`:'';return `    <tr${bg?' style="'+bg+'"':''}>\n      <th style="${thOvr}">${esc(r.key)}</th>\n      <td style="${tdOvr}">${nl2br(r.value)}${r.value2?`<br>\n      <span style="${td2Ovr}">${nl2br(r.value2)}</span>`:''}</td>\n    </tr>`;}).join('\n'); return `  <table style="${I.specTable}">\n    <tbody>\n${rows}\n    </tbody>\n  </table>`; }
+      case 'spec': { normalizeSpec(b); const ss=specStripe(); const thOvr=ovr(I.specTh,b.thFontSize,b.thFontColor,12); const rows=b.rows.filter(r=>r.key||(r.values&&r.values.some(v=>v))).map((r,i)=>{const bg=i%2===0?`background:${ss};`:'';const vf0=b.valueFonts[0];const tdOvr=ovr(I.specTd,vf0.size,vf0.color,11);const rest=r.values.slice(1).map((v,vi)=>{if(!v) return '';const vf=b.valueFonts[vi+1];const ex=ovr(I.specTd,vf.size,vf.color,11);return `<br>\n      <span style="${ex}">${nl2br(v)}</span>`;}).join('');return `    <tr${bg?' style="'+bg+'"':''}>\n      <th style="${thOvr}">${esc(r.key)}</th>\n      <td style="${tdOvr}">${nl2br(r.values[0]||'')}${rest}</td>\n    </tr>`;}).join('\n'); return `  <table style="${I.specTable}">\n    <tbody>\n${rows}\n    </tbody>\n  </table>`; }
       case 'grid2': {function gyc(d,side){const b2=d.body2?`\n      <div style="${ovr(I.body,d.body2FontSize,d.body2FontColor,12)}">${nl2br(d.body2)}</div>`:''; return `    <div style="${I.col}">\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(ygu(d))}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>\n      <div style="${ovr(I.colHeading,d.headingFontSize,d.headingFontColor,13)}">${esc(d.heading)}</div>\n      <div style="${ovr(I.body,d.bodyFontSize,d.bodyFontColor,12)}">${nl2br(d.body)}</div>${b2}\n    </div>`;} return `  <div style="${I.grid2}">\n${gyc(b.left)}\n${gyc(b.right)}\n  </div>`;}
       case 'grid2rev': {function gycr(d,side){const b2=d.body2?`\n      <div style="${ovr(I.body,d.body2FontSize,d.body2FontColor,12)}">${nl2br(d.body2)}</div>`:''; return `    <div style="${I.col}">\n      <div style="${ovr(I.colHeading,d.headingFontSize,d.headingFontColor,13)}">${esc(d.heading)}</div>\n      <div style="${ovr(I.body,d.bodyFontSize,d.bodyFontColor,12)}">${nl2br(d.body)}</div>${b2}\n      <div style="${I.imgWrap388x240}">\n        <img src="${esc(ygu(d))}" alt="${esc(d.alt)}" style="${I.imgInner}">\n      </div>\n    </div>`;} return `  <div style="${I.grid2}">\n${gycr(b.left)}\n${gycr(b.right)}\n  </div>`;}
       case 'banner': {const lk=b.linkYahoo||b.link;const bIw={'388x155':I.imgWrap388x155,'800x372':I.imgWrap800x372,'800x528':I.imgWrap800x528}[b.bannerSize||'388x155']||I.imgWrap388x155;const img=`  <div style="${bIw}">\n    <img src="${esc(yu(b))}" alt="${esc(b.alt)}" style="${I.imgInner}">\n  </div>`;return lk?`  <a href="${esc(lk)}" style="${I.bannerLink}" target="_blank">\n${img}\n  </a>`:img;}
@@ -927,6 +983,7 @@ function downloadAllExport(){
 }
 function restoreProject(data){
   if(!data.blocks||!Array.isArray(data.blocks)){alert('無効なファイルです');return;}
+  data.blocks.forEach(b=>{ if(b&&b.type==='spec') normalizeSpec(b); });
   blocks=data.blocks;
   blockIdCounter=data.blockIdCounter||0;
   currentPlatform=data.platform||'makeshop';
@@ -998,6 +1055,7 @@ function showLoadModal(){
 
 function loadProject(i){
   const saves=getSaves();const s=saves[i];if(!s)return;
+  (s.blocks||[]).forEach(b=>{ if(b&&b.type==='spec') normalizeSpec(b); });
   blocks=s.blocks; blockIdCounter=s.blockIdCounter||0;
   currentPlatform=s.platform||'makeshop'; bgColor=s.bgColor||'#ffffff';
   document.getElementById('platformSelect').value=currentPlatform;
@@ -1021,7 +1079,7 @@ function loadSample(){
   addBlock('heading-lg');Object.assign(blocks[3],{heading:'高剛性ウレタン素材を採用',headingFontSize:17,headingFontColor:'#000000',body:'独自開発の高剛性ウレタンを採用し、軽量ながら優れた耐久性を実現しました。\n走行時の空力負荷にも耐える設計で、長期間にわたり美しいフォルムを維持します。',bodyFontSize:12,bodyFontColor:'#000000'});
   addBlock('grid2');Object.assign(blocks[4],{left:{url:'https://image.rakuten.co.jp/example/cabinet/front001.jpg',alt:'フロントビュー',heading:'フロントビュー',body:'低重心デザインがスポーティな印象を強調します。',headingFontSize:13,headingFontColor:'#000000',bodyFontSize:12,bodyFontColor:'#000000'},right:{url:'https://image.rakuten.co.jp/example/cabinet/side001.jpg',alt:'サイドビュー',heading:'サイドビュー',body:'ボディラインと一体化する流麗なフォルムです。',headingFontSize:13,headingFontColor:'#000000',bodyFontSize:12,bodyFontColor:'#000000'}});
   addBlock('band');Object.assign(blocks[5],{text:'スペック',textFontSize:15,textFontColor:'#000000'});
-  addBlock('spec');blocks[6].rows=[{key:'素材',value:'高剛性ウレタン（PUR）',value2:''},{key:'カラー',value:'未塗装（素地）',value2:''},{key:'適合車種',value:'TOYOTA GR86 (ZN8) / SUBARU BRZ (ZD8) 2021年〜',value2:''}];
+  addBlock('spec');blocks[6].rows=[{key:'素材',values:['高剛性ウレタン（PUR）','','']},{key:'カラー',values:['未塗装（素地）','','']},{key:'適合車種',values:['TOYOTA GR86 (ZN8) / SUBARU BRZ (ZD8) 2021年〜','','']}];
   addBlock('band');Object.assign(blocks[7],{text:'注意事項',textFontSize:15,textFontColor:'#000000'});
   addBlock('heading-md');Object.assign(blocks[8],{heading:'取り付けについて',headingFontSize:16,headingFontColor:'#000000',body:'本製品の取り付けには専門知識が必要です。\n必ず認定整備工場での取り付けを推奨いたします。',bodyFontSize:12,bodyFontColor:'#000000'});
   renderEditor();renderPreview();
